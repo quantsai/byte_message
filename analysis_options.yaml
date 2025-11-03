@@ -1,0 +1,17 @@
+include: package:flutter_lints/flutter.yaml
+
+# Additional information about this file can be found at
+# https://dart.dev/guides/language/analysis-options
+
+analyzer:
+  exclude:
+    - example/**
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+linter:
+  rules:
+    # 禁用常量标识符命名规则，允许静态常量使用SCREAMING_SNAKE_CASE
+    constant_identifier_names: false
+    # 允许在示例和测试中使用print
+    avoid_print: false
