@@ -68,7 +68,7 @@ void main() {
   final packet = InterChipPacket(
     flag: 0x10,           // 启用校验和
     len: 4,               // 总负载长度 (Cmd + Payload)
-    cmd: PacketCommand.normal,  // 普通指令
+    cmd: InterChipCmds.normal,  // 普通指令
     payload: [0x01, 0x02, 0x03], // 负载数据
   );
 
@@ -138,7 +138,7 @@ void main() {
   final packet = InterChipPacket(
     flag: 0x00,
     len: 4, // 命令(1) + 负载(3)
-    cmd: PacketCommand.normal,
+    cmd: InterChipCmds.normal,
     payload: [0x01, 0x02, 0x03],
   );
 
@@ -166,7 +166,7 @@ final encoder = InterChipEncoder();
 final shortPacket = InterChipPacket(
   flag: 0x00,  // 无校验和，短帧
   len: 4,
-  cmd: PacketCommand.normal,
+  cmd: InterChipCmds.normal,
   payload: [0x01, 0x02, 0x03],
 );
 
@@ -182,7 +182,7 @@ final longPacket = InterChipPacket(
   flag: 0x40,  // 长帧标志
   len: 0x2D,   // 低位字节 (301 & 0xFF)
   lenH: 0x01,  // 高位字节 (301 >> 8)
-  cmd: PacketCommand.dfu,
+  cmd: InterChipCmds.dfu,
   payload: longPayload,
 );
 
@@ -196,7 +196,7 @@ final encodedLong = encoder.encode(longPacket);
 final packetWithChecksum = InterChipPacket(
   flag: 0x10,  // 启用校验和
   len: 4,
-  cmd: PacketCommand.normal,
+  cmd: InterChipCmds.normal,
   payload: [0x01, 0x02, 0x03],
 );
 
@@ -217,8 +217,8 @@ if (decoded != null) {
 ```dart
 // 批量处理多个数据包
 final packets = <InterChipPacket>[
-  InterChipPacket(flag: 0x00, len: 2, cmd: PacketCommand.normal, payload: [0x01]),
-  InterChipPacket(flag: 0x10, len: 3, cmd: PacketCommand.dfu, payload: [0x02, 0x03]),
+  InterChipPacket(flag: 0x00, len: 2, cmd: InterChipCmds.normal, payload: [0x01]),
+  InterChipPacket(flag: 0x10, len: 3, cmd: InterChipCmds.dfu, payload: [0x02, 0x03]),
 ];
 
 final encodedPackets = <List<int>>[];
@@ -247,7 +247,7 @@ try {
   final invalidPacket = InterChipPacket(
     flag: 0x00,
     len: 1,
-    cmd: PacketCommand.normal,
+    cmd: InterChipCmds.normal,
     payload: List.generate(70000, (i) => i), // 超出最大长度
   );
 
@@ -274,12 +274,12 @@ if (decoded == null) {
 - **`InterChipPacket`**: 数据包模型类
 - **`InterChipEncoder`**: 编码器类
 - **`InterChipDecoder`**: 解码器类
-- **`PacketCommand`**: 命令类型枚举
+- **`InterChipCmds`**: 命令类型枚举
 - **`PacketUtils`**: 工具类
 
 ### 配置类
 
-- **`PacketFlags`**: 数据包标志位解析
+- **`InterChipFlags`**: 数据包标志位解析
 
 ## 示例
 

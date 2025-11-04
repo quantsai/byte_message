@@ -1,8 +1,7 @@
 import 'package:test/test.dart';
-import 'package:byte_message/src/encoders/inter_chip_encoder.dart';
-import 'package:byte_message/src/decoders/inter_chip_decoder.dart';
-import 'package:byte_message/src/models/packet_models.dart';
-import 'package:byte_message/src/models/packet_command.dart';
+import 'package:byte_message/src/protocols/layer1/inter_chip_encoder.dart';
+import 'package:byte_message/src/protocols/layer1/inter_chip_decoder.dart';
+import 'package:byte_message/src/models/layer1/inter_chip_models.dart';
 
 /// 集成测试
 ///
@@ -22,7 +21,7 @@ void main() {
       final originalPacket = InterChipPacket(
         flag: 0x00,
         len: 4,
-        cmd: PacketCommand.normal,
+        cmd: InterChipCmds.normal,
         payload: [0x01, 0x02, 0x03],
       );
 
@@ -47,7 +46,7 @@ void main() {
       final originalPacket = InterChipPacket(
         flag: 0x10,
         len: 4,
-        cmd: PacketCommand.normal,
+        cmd: InterChipCmds.normal,
         payload: [0x01, 0x02, 0x03],
       );
 
@@ -72,7 +71,7 @@ void main() {
       final payload = List.generate(300, (i) => i % 256);
       final originalPacket = InterChipPacket(
         flag: 0x40, // 长帧标志
-        cmd: PacketCommand.dfu,
+        cmd: InterChipCmds.dfu,
         payload: payload,
       );
 
@@ -96,7 +95,7 @@ void main() {
       final payload = List.generate(300, (i) => i % 256);
       final originalPacket = InterChipPacket(
         flag: 0x50, // 长帧标志 + 校验和标志
-        cmd: PacketCommand.dfu,
+        cmd: InterChipCmds.dfu,
         payload: payload,
       );
 
@@ -121,7 +120,7 @@ void main() {
       final originalPacket = InterChipPacket(
         flag: 0x00,
         len: 1,
-        cmd: PacketCommand.normal,
+        cmd: InterChipCmds.normal,
         payload: [],
       );
 
@@ -143,7 +142,7 @@ void main() {
 
   group('不同命令类型测试', () {
     test('所有命令类型往返测试', () {
-      final commands = [PacketCommand.normal, PacketCommand.dfu];
+      final commands = [InterChipCmds.normal, InterChipCmds.dfu];
 
       for (final cmd in commands) {
         final originalPacket = InterChipPacket(
@@ -174,7 +173,7 @@ void main() {
       final originalPacket = InterChipPacket(
         flag: 0x00,
         len: 255,
-        cmd: PacketCommand.normal,
+        cmd: InterChipCmds.normal,
         payload: payload,
       );
 
@@ -197,7 +196,7 @@ void main() {
       final payload = List.generate(255, (i) => i % 256);
       final originalPacket = InterChipPacket(
         flag: 0x40, // 长帧标志
-        cmd: PacketCommand.normal,
+        cmd: InterChipCmds.normal,
         payload: payload,
       );
 
@@ -222,7 +221,7 @@ void main() {
         flag: 0x40,
         len: 0xFF,
         lenH: 0xFF,
-        cmd: PacketCommand.normal,
+        cmd: InterChipCmds.normal,
         payload: payload,
       );
 
@@ -253,7 +252,7 @@ void main() {
       for (final payload in testCases) {
         final originalPacket = InterChipPacket(
           flag: 0x10, // 启用校验和
-          cmd: PacketCommand.normal,
+          cmd: InterChipCmds.normal,
           payload: payload,
         );
 
@@ -275,7 +274,7 @@ void main() {
       final originalPacket = InterChipPacket(
         flag: 0x10,
         len: 4,
-        cmd: PacketCommand.normal,
+        cmd: InterChipCmds.normal,
         payload: [0x01, 0x02, 0x03],
       );
 
@@ -304,7 +303,7 @@ void main() {
           InterChipPacket(
             flag: i % 2 == 0 ? 0x00 : 0x10,
             len: payload.length + 1,
-            cmd: PacketCommand.values[i % PacketCommand.values.length],
+            cmd: InterChipCmds.values[i % InterChipCmds.values.length],
             payload: payload,
           ),
         );
@@ -340,7 +339,7 @@ void main() {
         final payload = List.generate(size - 1, (i) => i % 256);
         final originalPacket = InterChipPacket(
           flag: 0x40, // 长帧标志
-          cmd: PacketCommand.dfu,
+          cmd: InterChipCmds.dfu,
           payload: payload,
         );
 
@@ -371,7 +370,7 @@ void main() {
       final originalPacket = InterChipPacket(
         flag: 0x10,
         len: 10,
-        cmd: PacketCommand.normal,
+        cmd: InterChipCmds.normal,
         payload: List.generate(9, (i) => i),
       );
 

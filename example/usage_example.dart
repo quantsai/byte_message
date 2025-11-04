@@ -28,7 +28,7 @@ void example1() {
 
   // 只提供cmd和payload，明确指定短帧+校验和
   final packet = InterChipPacket(
-    cmd: PacketCommand.normal,
+    cmd: InterChipCmds.normal,
     payload: [0x01, 0x02, 0x03],
   );
 
@@ -57,7 +57,7 @@ void example2() {
   const decoder = InterChipDecoder();
 
   final packet = InterChipPacket(
-    cmd: PacketCommand.normal,
+    cmd: InterChipCmds.normal,
     payload: List.generate(300, (index) => (index % 256)),
   );
 
@@ -86,8 +86,8 @@ void example3() {
 
   // 只提供cmd和payload，生成3个元素的payload（短帧）
   final packet = InterChipPacket(
-    flag: PacketFlags(isLongFrame: true, checksumEnable: true).encode(),
-    cmd: PacketCommand.normal,
+    flag: InterChipFlags(isLongFrame: true, checksumEnable: true).encode(),
+    cmd: InterChipCmds.normal,
     payload: List.generate(3, (index) => (index % 256)),
   );
 
@@ -118,10 +118,10 @@ void example4() {
   const decoder = InterChipDecoder();
 
   final packet = InterChipPacket(
-    flag: PacketFlags(isLongFrame: true, checksumEnable: true).encode(),
+    flag: InterChipFlags(isLongFrame: true, checksumEnable: true).encode(),
     len: 0,
     lenH: 4,
-    cmd: PacketCommand.normal,
+    cmd: InterChipCmds.normal,
     payload: List.generate(3, (index) => (index % 256)),
     checksum: 0xaf,
   );
@@ -140,11 +140,11 @@ void example4() {
   print('');
 }
 
-/// 标志位 PacketFlags 使用示例
+/// 标志位 InterChipFlags 使用示例
 ///
 /// 功能描述：
-/// - 展示 PacketFlags 的位定义、编码与解码（与 encode 的反向操作）
-/// - 通过 PacketFlags.encode() 生成整型标志位，再使用 PacketFlags.decode()/fromFlag 解析回对象
+/// - 展示 InterChipFlags 的位定义、编码与解码（与 encode 的反向操作）
+/// - 通过 InterChipFlags.encode() 生成整型标志位，再使用 InterChipFlags.decode()/fromFlag 解析回对象
 ///
 /// 参数：
 /// - 无
@@ -153,7 +153,7 @@ void example4() {
 /// - void（仅打印示例结果）
 void example5() {
   print('');
-  print('5. 标志位 PacketFlags 使用示例');
+  print('5. 标志位 InterChipFlags 使用示例');
   print('=' * 100);
 
   // 参见类定义位置：/Users/caiquan/code/lib/byte_message/lib/src/models/packet_models.dart#L170-170
@@ -162,15 +162,15 @@ void example5() {
   // |reserve|LongFrame|reserve|ChecksumEnable|reserve|reserve|reserve|reserve|
 
   // 示例一：长帧且启用校验和
-  final flags2 = PacketFlags(isLongFrame: true, checksumEnable: true);
+  final flags2 = InterChipFlags(isLongFrame: true, checksumEnable: true);
   final encoded2 = flags2.encode();
-  final decoded2 = PacketFlags.decode(encoded2);
+  final decoded2 = InterChipFlags.decode(encoded2);
   print(
       '示例二: flags=$flags2 -> encode=0x${encoded2.toRadixString(16).padLeft(2, '0')} -> decode=$decoded2');
 
   // 示例二：直接从整型标志位创建（工厂方法 fromFlag）
   final fromFlag =
-      PacketFlags.fromFlag(0x50); // 0x40: LongFrame, 0x10: ChecksumEnable
+      InterChipFlags.fromFlag(0x50); // 0x40: LongFrame, 0x10: ChecksumEnable
   print('示例三: fromFlag(0x50) -> $fromFlag');
 
   print('');
@@ -202,7 +202,7 @@ void example6() {
 
   // 生成一层数据包（Cmd 固定为 0xF8 / normal）
   final packet =
-      InterChipPacket(cmd: PacketCommand.normal, payload: cbPayloadBytes);
+      InterChipPacket(cmd: InterChipCmds.normal, payload: cbPayloadBytes);
   print('一层object: $packet');
 
   // 序列化为字节流，并通过一层解码器复原数据包
@@ -212,8 +212,8 @@ void example6() {
   final decodedPacket = interDecoder.decode(bytes)!;
   print('一层decode: $decodedPacket');
 
-  // 解析二层结构
-  final decodedCb = cbDecoder.decode(decodedPacket)!;
+  // 解析二层结构（传入一层 payload）
+  final decodedCb = cbDecoder.decode(decodedPacket.payload)!;
   print('二层decode: $decodedCb');
 
   print('');
@@ -249,7 +249,7 @@ void example7() {
 
   // 生成一层数据包（Cmd 固定为 0x20 / dfu）
   final packet =
-      InterChipPacket(cmd: PacketCommand.dfu, payload: dfuPayloadBytes);
+      InterChipPacket(cmd: InterChipCmds.dfu, payload: dfuPayloadBytes);
   print('一层object: $packet');
 
   // 序列化为字节流，并通过一层解码器复原数据包
@@ -257,8 +257,8 @@ void example7() {
   final decodedPacket = interDecoder.decode(bytes)!;
   print('一层decode: $decodedPacket');
 
-  // 解析二层结构
-  final decodedDfu = dfuDecoder.decode(decodedPacket)!;
+  // 解析二层结构（传入一层 payload）
+  final decodedDfu = dfuDecoder.decode(decodedPacket.payload)!;
   print('二层decode: $decodedDfu');
 
   print('');

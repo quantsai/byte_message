@@ -12,10 +12,6 @@
 /// |Flag|Len|Cmd|_CbCmd_|_CbPayload_|Checksum|
 library;
 
-import '../models/packet_models.dart';
-import '../models/packet_command.dart';
-import '../constants/packet_constants.dart';
-
 /// Control Bus 二层消息
 class ControlBusMessage {
   /// 子命令（u8）
@@ -32,41 +28,25 @@ class ControlBusMessage {
   const ControlBusMessage({required this.cbCmd, List<int>? cbPayload})
       : cbPayload = cbPayload ?? const [];
 
-  /// 从一层数据包转换为 ControlBusMessage
+  // 注意：过去版本提供了 fromPacket(InterChipPacket) 以支持从一层数据包直接解码；
+  // 为避免语义耦合并强化层次边界，该方法已移除，推荐使用 fromBytes(List<int>)。
+
+  /// 从二层字节序列转换为 ControlBusMessage（不依赖一层数据包）
   ///
   /// 参数：
-  /// - packet：InterChipPacket（Cmd 应为 0xF8 / PacketCommand.normal）
+  /// - bytes：格式为 CbCmd | CbPayload
   ///
   /// 返回值：
-  /// - ControlBusMessage；若格式不合法返回 null
-  static ControlBusMessage? fromPacket(InterChipPacket packet) {
-    if (packet.cmd.value != PacketConstants.CMD_CONTROL_BUS) {
+  /// - ControlBusMessage；若字节序列不合法返回 null
+  static ControlBusMessage? fromBytes(List<int> bytes) {
+    if (bytes.isEmpty) {
       return null;
     }
-    if (packet.payload.isEmpty) {
-      return null;
-    }
-    final cbCmd = packet.payload[0];
-    final cbPayload =
-        packet.payload.length > 1 ? packet.payload.sublist(1) : <int>[];
+    final cbCmd = bytes[0];
+    final cbPayload = bytes.length > 1 ? bytes.sublist(1) : <int>[];
     return ControlBusMessage(cbCmd: cbCmd, cbPayload: cbPayload);
   }
 
-  /// 转换为一层数据包（用于编码前置）
-  ///
-  /// 设计原则：
-  /// - 二层仅生成自身字段（CbCmd、CbPayload），不暴露或携带任何一层字段
-  /// - 一层字段（Flag/Len/LenH/Checksum）由 InterChipEncoder 在序列化阶段自动生成
-  ///
-  /// 返回值：
-  /// - InterChipPacket：Cmd 固定为 PacketCommand.normal（0xF8），payload 为 [cbCmd] + cbPayload
-  InterChipPacket toPacket() {
-    final payload = <int>[cbCmd, ...cbPayload];
-    return InterChipPacket(
-      cmd: PacketCommand.normal,
-      payload: payload,
-    );
-  }
 
   @override
   String toString() =>

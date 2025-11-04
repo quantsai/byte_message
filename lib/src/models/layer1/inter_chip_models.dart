@@ -1,9 +1,74 @@
 /// Inter-chip协议的核心数据模型定义
 library;
 
-import '../constants/packet_constants.dart';
-import '../utils/packet_utils.dart';
-import 'packet_command.dart';
+import '../../constants/packet_constants.dart';
+import '../../utils/packet_utils.dart';
+
+/// Inter-chip 协议命令枚举（合并至本文件，统一管理一层数据结构与命令）
+///
+/// 定义了 inter-chip 协议中 Cmd 字段的所有可用命令类型：
+/// - [normal]: 普通指令 (0xF8) - 用于常规通信
+/// - [dfu]: DFU指令 (0x20) - 用于设备固件升级过程
+enum InterChipCmds {
+  /// 普通指令 (0xF8)
+  ///
+  /// 使用 inter-chip 通讯协议的扩展模式，用于常规设备间通信
+  normal(0xF8),
+
+  /// DFU指令 (0x20)
+  ///
+  /// 在设备 DFU 时使用，用于开启和结束升级过程，以及接受升级数据
+  dfu(0x20);
+
+  /// 构造函数
+  ///
+  /// [value] 命令的字节值
+  const InterChipCmds(this.value);
+
+  /// 命令的字节值
+  final int value;
+
+  /// 从字节值创建命令枚举
+  ///
+  /// [value] 要转换的字节值
+  ///
+  /// 返回对应的 [InterChipCmds] 枚举值
+  ///
+  /// 抛出 [ArgumentError] 如果字节值不对应任何已知命令
+  static InterChipCmds fromValue(int value) {
+    for (final command in InterChipCmds.values) {
+      if (command.value == value) {
+        return command;
+      }
+    }
+    throw ArgumentError('Unknown command value: 0x${value.toRadixString(16)}');
+  }
+
+  /// 检查字节值是否为有效的命令
+  ///
+  /// [value] 要检查的字节值
+  ///
+  /// 返回 true 如果是有效命令，否则返回 false
+  static bool isValidCommand(int value) {
+    return InterChipCmds.values.any((command) => command.value == value);
+  }
+
+  /// 获取所有可用命令的字节值列表
+  ///
+  /// 返回包含所有命令字节值的列表
+  static List<int> get allValues =>
+      InterChipCmds.values.map((cmd) => cmd.value).toList();
+
+  @override
+  String toString() {
+    switch (this) {
+      case InterChipCmds.normal:
+        return 'InterChipCmds.normal(0x${value.toRadixString(16)})';
+      case InterChipCmds.dfu:
+        return 'InterChipCmds.dfu(0x${value.toRadixString(16)})';
+    }
+  }
+}
 
 /// Inter-chip数据包结构
 ///
@@ -11,7 +76,7 @@ import 'packet_command.dart';
 /// - Flag: u8? 标志位，定义数据包的解释方式（可选）
 /// - Len: u8? 长度低位，表示Payload+Cmd的长度（可选）
 /// - LenH: u8? 长度高位，当LongFrame启用时存在（可选）
-/// - Cmd: PacketCommand 命令字段，表示操作类型
+/// - Cmd: InterChipCmds 命令字段，表示操作类型
 /// - Payload: u8[n] 数据负载
 /// - Checksum: u8? 校验和，当ChecksumEnable启用时存在（可选）
 class InterChipPacket {
@@ -25,7 +90,7 @@ class InterChipPacket {
   final int? lenH;
 
   /// 命令字段
-  final PacketCommand cmd;
+  final InterChipCmds cmd;
 
   /// 数据负载
   final List<int> payload;
@@ -82,9 +147,9 @@ class InterChipPacket {
   }
 
   /// 获取标志位对象（如果flag不为null）
-  PacketFlags? get flags {
+  InterChipFlags? get flags {
     if (flag == null) return null;
-    return PacketFlags.fromFlag(flag!);
+    return InterChipFlags.fromFlag(flag!);
   }
 
   /// 计算总负载长度（包含cmd字段）
@@ -108,7 +173,7 @@ class InterChipPacket {
     int? flag,
     int? len,
     int? lenH,
-    PacketCommand? cmd,
+    InterChipCmds? cmd,
     List<int>? payload,
     int? checksum,
   }) {
@@ -167,7 +232,7 @@ class InterChipPacket {
 /// Flag字段的位定义（按照协议文档）：
 /// |7|6|5|4|3|2|1|0|
 /// |reserve|LongFrame|reserve|ChecksumEnable|reserve|reserve|reserve|reserve|
-class PacketFlags {
+class InterChipFlags {
   /// 是否启用长帧模式（LenH字段）- 第6位
   final bool isLongFrame;
 
@@ -175,11 +240,12 @@ class PacketFlags {
   final bool checksumEnable;
 
   /// 构造函数
-  const PacketFlags({required this.isLongFrame, required this.checksumEnable});
+  const InterChipFlags(
+      {required this.isLongFrame, required this.checksumEnable});
 
-  /// 从flag字节创建PacketFlags对象
-  factory PacketFlags.fromFlag(int flag) {
-    return PacketFlags(
+  /// 从flag字节创建InterChipFlags对象
+  factory InterChipFlags.fromFlag(int flag) {
+    return InterChipFlags(
       isLongFrame: (flag & PacketConstants.FLAG_LONG) != 0,
       checksumEnable: (flag & PacketConstants.FLAG_CHECKSUM) != 0,
     );
@@ -193,7 +259,7 @@ class PacketFlags {
     return flag;
   }
 
-  /// 将整型标志位转换为 PacketFlags 对象（与 encode 的反向操作）
+  /// 将整型标志位转换为 InterChipFlags 对象（与 encode 的反向操作）
   ///
   /// 参数说明：
   /// - flag：整型标志位（8位），按照协议位定义；
@@ -201,21 +267,21 @@ class PacketFlags {
   ///   - 第4位（PacketConstants.FLAG_CHECKSUM）：是否启用校验和
   ///
   /// 返回值：
-  /// - PacketFlags：包含 isLongFrame 与 checksumEnable 两个布尔字段的标志位对象
-  static PacketFlags decode(int flag) {
+  /// - InterChipFlags：包含 isLongFrame 与 checksumEnable 两个布尔字段的标志位对象
+  static InterChipFlags decode(int flag) {
     // 复用 fromFlag 的逻辑，确保行为一致
-    return PacketFlags.fromFlag(flag);
+    return InterChipFlags.fromFlag(flag);
   }
 
   @override
   String toString() {
-    return 'PacketFlags{isLongFrame: $isLongFrame, checksumEnable: $checksumEnable}';
+    return 'InterChipFlags{isLongFrame: $isLongFrame, checksumEnable: $checksumEnable}';
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    if (other is! PacketFlags) return false;
+    if (other is! InterChipFlags) return false;
     return isLongFrame == other.isLongFrame &&
         checksumEnable == other.checksumEnable;
   }

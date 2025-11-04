@@ -11,7 +11,7 @@ void main() {
 
   // 创建测试数据包
   final packet = InterChipPacket(
-    cmd: PacketCommand.normal,
+    cmd: InterChipCmds.normal,
     payload: [0x01, 0x02, 0x03],
   );
 
@@ -31,12 +31,12 @@ void main() {
 
   // 分析编码数据的结构
   print('\n编码数据分析:');
-  PacketFlags? flags;
+  InterChipFlags? flags;
   if (encodedData.isNotEmpty) {
     print(
       '  Flag: 0x${encodedData[0].toRadixString(16).padLeft(2, '0').toUpperCase()}',
     );
-    flags = PacketFlags.fromFlag(encodedData[0]);
+    flags = InterChipFlags.fromFlag(encodedData[0]);
     print('    isLongFrame: ${flags.isLongFrame}');
     print('    checksumEnable: ${flags.checksumEnable}');
   }
@@ -87,11 +87,4 @@ void main() {
   } catch (e) {
     print('  解码异常: $e');
   }
-
-  final tryDecodeResult = decoder.tryDecode(encodedData);
-  print('  tryDecode结果:');
-  print('    success: ${tryDecodeResult.success}');
-  print('    needMoreData: ${tryDecodeResult.needMoreData}');
-  print('    error: ${tryDecodeResult.error}');
-  print('    errorCode: ${tryDecodeResult.errorCode}');
 }

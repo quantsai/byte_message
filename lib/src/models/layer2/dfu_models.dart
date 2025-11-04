@@ -13,9 +13,8 @@
 /// |Flag|Len|Cmd|_DfuCmd_|_DfuVersion_|_DfuPayload_|Checksum|
 library;
 
-import '../models/packet_models.dart';
-import '../models/packet_command.dart';
-import '../constants/packet_constants.dart';
+import '../layer1/inter_chip_models.dart';
+import '../../constants/packet_constants.dart';
 
 /// DFU 二层消息
 class DfuMessage {
@@ -43,7 +42,7 @@ class DfuMessage {
   /// 从一层数据包转换为 DfuMessage
   ///
   /// 参数：
-  /// - packet：InterChipPacket（Cmd 应为 0x20 / PacketCommand.dfu）
+  /// - packet：InterChipPacket（Cmd 应为 0x20 / InterChipCmds.dfu）
   ///
   /// 返回值：
   /// - DfuMessage；若格式不合法返回 null
@@ -65,6 +64,27 @@ class DfuMessage {
     );
   }
 
+  /// 从二层字节序列转换为 DfuMessage（不依赖一层数据包）
+  ///
+  /// 参数：
+  /// - bytes：格式为 DfuCmd | DfuVersion | DfuPayload
+  ///
+  /// 返回值：
+  /// - DfuMessage；若字节序列不合法返回 null
+  static DfuMessage? fromBytes(List<int> bytes) {
+    if (bytes.length < 2) {
+      return null; // 至少包含 dfuCmd 与 dfuVersion
+    }
+    final dfuCmd = bytes[0];
+    final dfuVersion = bytes[1];
+    final dfuPayload = bytes.length > 2 ? bytes.sublist(2) : <int>[];
+    return DfuMessage(
+      dfuCmd: dfuCmd,
+      dfuVersion: dfuVersion,
+      dfuPayload: dfuPayload,
+    );
+  }
+
   /// 转换为一层数据包（用于编码前置）
   ///
   /// 设计原则：
@@ -72,11 +92,11 @@ class DfuMessage {
   /// - 一层字段（Flag/Len/LenH/Checksum）由 InterChipEncoder 在序列化阶段自动生成
   ///
   /// 返回值：
-  /// - InterChipPacket：Cmd 固定为 PacketCommand.dfu（0x20），payload 为 [dfuCmd, dfuVersion] + dfuPayload
+  /// - InterChipPacket：Cmd 固定为 InterChipCmds.dfu（0x20），payload 为 [dfuCmd, dfuVersion] + dfuPayload
   InterChipPacket toPacket() {
     final payload = <int>[dfuCmd, dfuVersion, ...dfuPayload];
     return InterChipPacket(
-      cmd: PacketCommand.dfu,
+      cmd: InterChipCmds.dfu,
       payload: payload,
     );
   }

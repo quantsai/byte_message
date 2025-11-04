@@ -1,15 +1,15 @@
-import '../interfaces/packet_decoder.dart';
-import '../models/packet_models.dart';
-import '../models/packet_command.dart';
-import '../constants/packet_constants.dart';
-import '../utils/packet_utils.dart';
-import '../encoders/inter_chip_encoder.dart';
+import '../../interfaces/layer1/layer1_packet_decoder.dart';
+import '../../models/layer1/inter_chip_models.dart';
+import '../../constants/packet_constants.dart';
+import '../../utils/packet_utils.dart';
+import 'inter_chip_encoder.dart';
 
 /// Inter-chip协议解码器实现
 ///
 /// 负责将二进制数据解码为InterChipPacket对象
 /// 支持标准帧和长帧格式的解码
-class InterChipDecoder implements PacketDecoder {
+class InterChipDecoder
+    implements Layer1PacketDecoder<InterChipPacket> {
   /// 构造函数（已移除配置依赖，采用固定的解码行为）
   const InterChipDecoder();
 
@@ -59,9 +59,9 @@ class InterChipDecoder implements PacketDecoder {
       }
 
       final cmdValue = data[cmdIndex];
-      PacketCommand cmd;
+      InterChipCmds cmd;
       try {
-        cmd = PacketCommand.fromValue(cmdValue);
+        cmd = InterChipCmds.fromValue(cmdValue);
       } catch (e) {
         return null;
       }
@@ -117,45 +117,6 @@ class InterChipDecoder implements PacketDecoder {
   }
 
   @override
-  DecodeResult tryDecode(List<int> data) {
-    try {
-      // 检查是否有足够的数据进行基本解析
-      if (data.isEmpty) {
-        return DecodeResult.needMoreData('Empty data');
-      }
-
-      // 计算期望的数据包长度
-      final expectedLength = calculateExpectedLength(data);
-      if (expectedLength == null) {
-        return DecodeResult.needMoreData('Cannot determine packet length');
-      }
-
-      // 检查是否有足够的数据
-      if (data.length < expectedLength) {
-        return DecodeResult.needMoreData(
-          'Need ${expectedLength - data.length} more bytes',
-        );
-      }
-
-      // 尝试解码
-      final packet = decode(data.sublist(0, expectedLength));
-      if (packet != null) {
-        return DecodeResult.success(packet, expectedLength);
-      } else {
-        return DecodeResult.failure(
-          'Decoding failed',
-          errorCode: 'DECODE_ERROR',
-        );
-      }
-    } catch (e) {
-      return DecodeResult.failure(
-        'Exception during decoding: $e',
-        errorCode: 'EXCEPTION',
-      );
-    }
-  }
-
-  @override
   bool verifyChecksum(List<int> data, int checksum) {
     if (data.isEmpty) {
       throw ArgumentError('Data cannot be empty for checksum verification');
@@ -165,13 +126,12 @@ class InterChipDecoder implements PacketDecoder {
     return calculatedChecksum == checksum;
   }
 
-  @override
-  PacketFlags parseFlags(int flag) {
+  InterChipFlags parseFlags(int flag) {
     if (flag < 0 || flag > 255) {
       throw ArgumentError('Flag value must be between 0 and 255, got: $flag');
     }
 
-    return PacketFlags.fromFlag(flag);
+    return InterChipFlags.fromFlag(flag);
   }
 
   @override
@@ -250,16 +210,6 @@ class InterChipDecoder implements PacketDecoder {
     }
   }
 
-  InterChipPacket? tryDecodePartial(List<int> data) {
-    // 对于部分数据，我们只能尝试解码如果数据看起来是完整的
-    final expectedLength = calculateExpectedLength(data);
-    if (expectedLength == null || data.length < expectedLength) {
-      return null;
-    }
-
-    return decode(data);
-  }
-
   List<InterChipPacket> decodeMultiple(List<int> data) {
     List<InterChipPacket> packets = [];
     int offset = 0;
@@ -294,7 +244,7 @@ class InterChipDecoder implements PacketDecoder {
   bool validatePacketIntegrity(InterChipPacket packet) {
     try {
       // 验证命令字段
-      if (!PacketCommand.isValidCommand(packet.cmd.value)) {
+      if (!InterChipCmds.isValidCommand(packet.cmd.value)) {
         return false;
       }
 

@@ -6,10 +6,11 @@
 /// - 若需要输出最终字节流：请自行构造 InterChipPacket 并使用 InterChipEncoder.encode()
 library;
 
-import '../models/control_bus_models.dart';
+import '../../../models/layer2/control_bus_models.dart';
+import '../../../interfaces/layer2/layer2_payload_encoder.dart';
 
 /// Control Bus 编码器实现
-class ControlBusEncoder {
+class ControlBusEncoder implements Layer2PayloadEncoder<ControlBusMessage> {
   /// 编码二层负载为字节数组
   ///
   /// 参数：
@@ -17,6 +18,7 @@ class ControlBusEncoder {
   ///
   /// 返回值：
   /// - List<int>：仅包含二层内容 [cbCmd] + cbPayload，不含任何一层字段
+  @override
   List<int> encode(ControlBusMessage message) {
     return <int>[message.cbCmd, ...message.cbPayload];
   }
