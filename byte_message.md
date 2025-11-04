@@ -102,7 +102,7 @@ Checksum 是数据包中，自身之前所有字节进行异或求和后的结�
 
 > Checksum=pkg[0] xor pkg[1] xor pkg[2] xor ... xor pkg[n-2]
 
-## 控制指令
+## control bus控制指令
 
 本身使用 inter-chip 通讯协议的扩展模式，定义了 inter-chip 协议中 Cmd 字段的自定义命令，0xF8。
 
@@ -128,8 +128,12 @@ Checksum 是数据包中，自身之前所有字节进行异或求和后的结�
 ### 连接请求（0x10）
 
 #### 请求包 Payload
-
-| CbCmd | 协议版本 |
+ 
+ 
+ 
+ 
+ 、、
+ | CbCmd | 协议版本 |
 | ----- | -------- |
 | 0x10  | u8       |
 

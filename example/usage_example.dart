@@ -12,6 +12,8 @@ void main() {
   example3();
   example4();
   example5();
+  example6();
+  example7();
 }
 
 /// 自动短帧：flag、len、lenH、checksum
@@ -170,6 +172,94 @@ void example5() {
   final fromFlag =
       PacketFlags.fromFlag(0x50); // 0x40: LongFrame, 0x10: ChecksumEnable
   print('示例三: fromFlag(0x50) -> $fromFlag');
+
+  print('');
+}
+
+/// 二层协议：Control Bus 编码与解码示例
+///
+/// 功能描述：
+/// - 使用 ControlBusMessage 构造二层负载（CbCmd + CbPayload）
+/// - 通过 ControlBusEncoder 生成一层 InterChipPacket 并序列化
+/// - 使用 InterChipDecoder + ControlBusDecoder 反解得到二层结构
+void example6() {
+  print('');
+  print('6. 二层协议：Control Bus 编码与解码示例');
+  print('=' * 100);
+
+  const interEncoder = InterChipEncoder();
+  const interDecoder = InterChipDecoder();
+  final cbEncoder = ControlBusEncoder();
+  final cbDecoder = ControlBusDecoder();
+
+  // 构造 Control Bus 二层消息：CbCmd=0x01，负载 [0xAA, 0xBB]
+  final cbMsg = ControlBusMessage(cbCmd: 0x01, cbPayload: [0xAA, 0xBB]);
+  print('二层object: $cbMsg');
+
+  // 仅编码二层内容（不含一层字段）
+  final cbPayloadBytes = cbEncoder.encode(cbMsg);
+  print('二层encode: $cbPayloadBytes');
+
+  // 生成一层数据包（Cmd 固定为 0xF8 / normal）
+  final packet =
+      InterChipPacket(cmd: PacketCommand.normal, payload: cbPayloadBytes);
+  print('一层object: $packet');
+
+  // 序列化为字节流，并通过一层解码器复原数据包
+  final bytes = interEncoder.encode(packet);
+  print('一层encode: $bytes');
+
+  final decodedPacket = interDecoder.decode(bytes)!;
+  print('一层decode: $decodedPacket');
+
+  // 解析二层结构
+  final decodedCb = cbDecoder.decode(decodedPacket)!;
+  print('二层decode: $decodedCb');
+
+  print('');
+}
+
+/// 二层协议：DFU 编码与解码示例
+///
+/// 功能描述：
+/// - 使用 DfuMessage 构造二层负载（DfuCmd + DfuVersion + DfuPayload）
+/// - 通过 DfuEncoder 生成一层 InterChipPacket 并序列化
+/// - 使用 InterChipDecoder + DfuDecoder 反解得到二层结构
+void example7() {
+  print('');
+  print('7. 二层协议：DFU 编码与解码示例');
+  print('=' * 100);
+
+  const interEncoder = InterChipEncoder();
+  const interDecoder = InterChipDecoder();
+  final dfuEncoder = DfuEncoder();
+  final dfuDecoder = DfuDecoder();
+
+  // 构造 DFU 二层消息：DfuCmd=0x10，Version=0x01，负载 [0xDE, 0xAD]
+  final dfuMsg = DfuMessage(
+    dfuCmd: 0x10,
+    dfuVersion: 0x01,
+    dfuPayload: [0xDE, 0xAD],
+  );
+  print('二层object: $dfuMsg');
+
+  // 仅编码二层内容（不含一层字段）
+  final dfuPayloadBytes = dfuEncoder.encode(dfuMsg);
+  print('二层encode: $dfuPayloadBytes');
+
+  // 生成一层数据包（Cmd 固定为 0x20 / dfu）
+  final packet =
+      InterChipPacket(cmd: PacketCommand.dfu, payload: dfuPayloadBytes);
+  print('一层object: $packet');
+
+  // 序列化为字节流，并通过一层解码器复原数据包
+  final bytes = interEncoder.encode(packet);
+  final decodedPacket = interDecoder.decode(bytes)!;
+  print('一层decode: $decodedPacket');
+
+  // 解析二层结构
+  final decodedDfu = dfuDecoder.decode(decodedPacket)!;
+  print('二层decode: $decodedDfu');
 
   print('');
 }
