@@ -116,8 +116,8 @@ void example4() {
 
   final packet = InterChipPacket(
     flag: PacketFlags(isLongFrame: true, checksumEnable: true).encode(),
-    len: 4,
-    lenH: 0,
+    len: 0,
+    lenH: 4,
     cmd: PacketCommand.normal,
     payload: List.generate(3, (index) => (index % 256)),
     checksum: 0xaf,

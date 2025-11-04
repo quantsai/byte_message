@@ -10,20 +10,14 @@ import '../encoders/inter_chip_encoder.dart';
 /// 负责将二进制数据解码为InterChipPacket对象
 /// 支持标准帧和长帧格式的解码
 class InterChipDecoder implements PacketDecoder {
-  /// 解码器配置
-  final DecoderConfig config;
-
-  /// 构造函数
-  const InterChipDecoder({this.config = const DecoderConfig()});
+  /// 构造函数（已移除配置依赖，采用固定的解码行为）
+  const InterChipDecoder();
 
   @override
   InterChipPacket? decode(List<int> data) {
     try {
       // 基本格式验证
       if (!isValidPacketFormat(data)) {
-        if (config.debugMode) {
-          throw DecoderException('Invalid packet format');
-        }
         return null;
       }
 
@@ -36,22 +30,12 @@ class InterChipDecoder implements PacketDecoder {
       if (flags.isLongFrame) {
         // 长帧模式：2字节长度
         if (data.length < 3) {
-          if (config.debugMode) {
-            throw DecoderException(
-              'Insufficient data for long frame length field',
-            );
-          }
           return null;
         }
         totalPayloadLength = PacketUtils.bytesToInt16(data[1], data[2]);
       } else {
         // 标准帧模式：1字节长度
         if (data.length < 2) {
-          if (config.debugMode) {
-            throw DecoderException(
-              'Insufficient data for standard frame length field',
-            );
-          }
           return null;
         }
         totalPayloadLength = data[1];
@@ -65,20 +49,12 @@ class InterChipDecoder implements PacketDecoder {
 
       // 验证数据长度
       if (data.length < expectedPacketLength) {
-        if (config.debugMode) {
-          throw DecoderException(
-            'Insufficient data: expected $expectedPacketLength bytes, got ${data.length}',
-          );
-        }
         return null;
       }
 
       // 解析命令字段
       int cmdIndex = 1 + lengthFieldSize;
       if (cmdIndex >= data.length) {
-        if (config.debugMode) {
-          throw DecoderException('Missing command field');
-        }
         return null;
       }
 
@@ -87,11 +63,6 @@ class InterChipDecoder implements PacketDecoder {
       try {
         cmd = PacketCommand.fromValue(cmdValue);
       } catch (e) {
-        if (config.debugMode) {
-          throw DecoderException(
-            'Invalid command value: 0x${cmdValue.toRadixString(16).padLeft(2, '0')}',
-          );
-        }
         return null;
       }
 
@@ -100,9 +71,6 @@ class InterChipDecoder implements PacketDecoder {
       int payloadLength = totalPayloadLength - 1; // 减去cmd字段长度
 
       if (payloadLength < 0) {
-        if (config.debugMode) {
-          throw DecoderException('Invalid payload length: $payloadLength');
-        }
         return null;
       }
 
@@ -110,9 +78,6 @@ class InterChipDecoder implements PacketDecoder {
       if (payloadLength > 0) {
         int payloadEndIndex = payloadStartIndex + payloadLength;
         if (payloadEndIndex > data.length) {
-          if (config.debugMode) {
-            throw DecoderException('Insufficient data for payload');
-          }
           return null;
         }
         payload = data.sublist(payloadStartIndex, payloadEndIndex);
@@ -123,22 +88,15 @@ class InterChipDecoder implements PacketDecoder {
       if (flags.checksumEnable) {
         int checksumIndex = payloadStartIndex + payloadLength;
         if (checksumIndex >= data.length) {
-          if (config.debugMode) {
-            throw DecoderException('Missing checksum field');
-          }
           return null;
         }
         receivedChecksum = data[checksumIndex];
 
         // 验证校验和（在创建对象前进行验证）
-        if (config.strictChecksumValidation) {
-          List<int> dataForChecksum = data.sublist(0, checksumIndex);
-          if (!verifyChecksum(dataForChecksum, receivedChecksum)) {
-            if (config.debugMode) {
-              throw DecoderException('Checksum validation failed');
-            }
-            return null;
-          }
+        // 始终严格验证校验和
+        List<int> dataForChecksum = data.sublist(0, checksumIndex);
+        if (!verifyChecksum(dataForChecksum, receivedChecksum)) {
+          return null;
         }
       }
 
@@ -154,9 +112,6 @@ class InterChipDecoder implements PacketDecoder {
 
       return packet;
     } catch (e) {
-      if (config.debugMode && e is! DecoderException) {
-        throw DecoderException('Decoding failed: $e');
-      }
       return null;
     }
   }

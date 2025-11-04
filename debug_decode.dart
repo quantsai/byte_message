@@ -6,7 +6,8 @@ void main() {
   // 创建编码器和解码器
   const encoder = InterChipEncoder();
   // 创建解码器（启用调试模式）
-  const decoder = InterChipDecoder(config: DecoderConfig(debugMode: true));
+// 使用默认解码器（已移除配置依赖）
+  const decoder = InterChipDecoder();
 
   // 创建测试数据包
   final packet = InterChipPacket(
