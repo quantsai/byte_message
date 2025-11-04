@@ -12,7 +12,7 @@ void main() {
       final flags = PacketFlags(isLongFrame: false, checksumEnable: false);
       expect(flags.isLongFrame, false);
       expect(flags.checksumEnable, false);
-      expect(flags.toFlag(), 0x00);
+      expect(flags.encode(), 0x00);
     });
 
     test('从标志位构造', () {
@@ -23,28 +23,28 @@ void main() {
 
     test('标志位转换', () {
       final flags = PacketFlags(isLongFrame: true, checksumEnable: false);
-      expect(flags.toFlag(), 0x40);
+      expect(flags.encode(), 0x40);
     });
 
     test('所有标志位组合', () {
       // 无标志位
       expect(
-        PacketFlags(isLongFrame: false, checksumEnable: false).toFlag(),
+        PacketFlags(isLongFrame: false, checksumEnable: false).encode(),
         0x00,
       );
       // 仅校验和
       expect(
-        PacketFlags(isLongFrame: false, checksumEnable: true).toFlag(),
+        PacketFlags(isLongFrame: false, checksumEnable: true).encode(),
         0x10,
       );
       // 仅长帧
       expect(
-        PacketFlags(isLongFrame: true, checksumEnable: false).toFlag(),
+        PacketFlags(isLongFrame: true, checksumEnable: false).encode(),
         0x40,
       );
       // 长帧+校验和
       expect(
-        PacketFlags(isLongFrame: true, checksumEnable: true).toFlag(),
+        PacketFlags(isLongFrame: true, checksumEnable: true).encode(),
         0x50,
       );
     });

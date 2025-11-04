@@ -186,11 +186,25 @@ class PacketFlags {
   }
 
   /// 转换为flag字节
-  int toFlag() {
+  int encode() {
     int flag = 0;
     if (isLongFrame) flag |= PacketConstants.FLAG_LONG;
     if (checksumEnable) flag |= PacketConstants.FLAG_CHECKSUM;
     return flag;
+  }
+
+  /// 将整型标志位转换为 PacketFlags 对象（与 encode 的反向操作）
+  ///
+  /// 参数说明：
+  /// - flag：整型标志位（8位），按照协议位定义；
+  ///   - 第6位（PacketConstants.FLAG_LONG）：是否启用长帧模式（LenH 字段）
+  ///   - 第4位（PacketConstants.FLAG_CHECKSUM）：是否启用校验和
+  ///
+  /// 返回值：
+  /// - PacketFlags：包含 isLongFrame 与 checksumEnable 两个布尔字段的标志位对象
+  static PacketFlags decode(int flag) {
+    // 复用 fromFlag 的逻辑，确保行为一致
+    return PacketFlags.fromFlag(flag);
   }
 
   @override

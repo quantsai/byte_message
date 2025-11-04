@@ -83,7 +83,7 @@ void example3() {
 
   // 只提供cmd和payload，生成3个元素的payload（短帧）
   final packet = InterChipPacket(
-    flag: PacketFlags(isLongFrame: true, checksumEnable: true).toFlag(),
+    flag: PacketFlags(isLongFrame: true, checksumEnable: true).encode(),
     cmd: PacketCommand.normal,
     payload: List.generate(3, (index) => (index % 256)),
   );
@@ -115,7 +115,7 @@ void example4() {
   const decoder = InterChipDecoder();
 
   final packet = InterChipPacket(
-    flag: PacketFlags(isLongFrame: true, checksumEnable: true).toFlag(),
+    flag: PacketFlags(isLongFrame: true, checksumEnable: true).encode(),
     len: 4,
     lenH: 0,
     cmd: PacketCommand.normal,

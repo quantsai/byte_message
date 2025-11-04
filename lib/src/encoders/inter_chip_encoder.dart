@@ -22,9 +22,8 @@ class InterChipEncoder implements PacketEncoder {
     validatePacket(packet);
 
     // 自动生成标志位
-    int flags = packet.flag == null
-        ? generateFlags(packet).toFlag()
-        : packet.flag!;
+    int flags =
+        packet.flag == null ? generateFlags(packet).encode() : packet.flag!;
 
     // 计算总负载长度（包含Cmd字段）
     final totalPayloadLength = packet.totalPayloadLength;
