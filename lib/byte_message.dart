@@ -31,3 +31,5 @@ export 'src/protocols/layer2/dfu/dfu_encoder.dart';
 export 'src/protocols/layer1/inter_chip_decoder.dart';
 export 'src/protocols/layer2/control_bus/control_bus_decoder.dart';
 export 'src/protocols/layer2/dfu/dfu_decoder.dart';
+// 导出第三层协议（Control Bus）
+export 'src/protocols/layer3/control_bus/connection_protocol.dart';
