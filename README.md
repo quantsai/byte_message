@@ -43,7 +43,7 @@ Inter-chip 协议是一个用于芯片间通信的二进制协议，支持：
 
 ```yaml
 dependencies:
-  byte_message: ^1.0.0
+  byte_message: ^1.1.0
 ```
 
 然后运行：
@@ -121,7 +121,7 @@ void main() {
 
 ```yaml
 dependencies:
-  byte_message: ^1.0.0
+  byte_message: ^1.1.0
 ```
 
 ### 基础使用
@@ -416,7 +416,7 @@ print(bytes); // [16, 4, 248]
 
 **作者**: 蔡铨  
 **创建日期**: 2025 年 11 月 3 日  
-**版本**: 1.0.0
+**版本**: 1.1.0
 
 ---
 
