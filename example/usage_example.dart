@@ -11,6 +11,7 @@ void main() {
   example2();
   example3();
   example4();
+  example5();
 }
 
 /// 自动短帧：flag、len、lenH、checksum
@@ -133,6 +134,42 @@ void example4() {
   // 解码验证
   final decodedPacket = decoder.decode(encodedData);
   print('解码成功:$decodedPacket');
+
+  print('');
+}
+
+/// 标志位 PacketFlags 使用示例
+///
+/// 功能描述：
+/// - 展示 PacketFlags 的位定义、编码与解码（与 encode 的反向操作）
+/// - 通过 PacketFlags.encode() 生成整型标志位，再使用 PacketFlags.decode()/fromFlag 解析回对象
+///
+/// 参数：
+/// - 无
+///
+/// 返回值：
+/// - void（仅打印示例结果）
+void example5() {
+  print('');
+  print('5. 标志位 PacketFlags 使用示例');
+  print('=' * 100);
+
+  // 参见类定义位置：/Users/caiquan/code/lib/byte_message/lib/src/models/packet_models.dart#L170-170
+  // 位定义（协议）：
+  // |7|6|5|4|3|2|1|0|
+  // |reserve|LongFrame|reserve|ChecksumEnable|reserve|reserve|reserve|reserve|
+
+  // 示例一：长帧且启用校验和
+  final flags2 = PacketFlags(isLongFrame: true, checksumEnable: true);
+  final encoded2 = flags2.encode();
+  final decoded2 = PacketFlags.decode(encoded2);
+  print(
+      '示例二: flags=$flags2 -> encode=0x${encoded2.toRadixString(16).padLeft(2, '0')} -> decode=$decoded2');
+
+  // 示例二：直接从整型标志位创建（工厂方法 fromFlag）
+  final fromFlag =
+      PacketFlags.fromFlag(0x50); // 0x40: LongFrame, 0x10: ChecksumEnable
+  print('示例三: fromFlag(0x50) -> $fromFlag');
 
   print('');
 }
