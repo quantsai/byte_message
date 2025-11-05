@@ -32,12 +32,12 @@ export 'src/protocols/layer1/inter_chip_decoder.dart';
 export 'src/protocols/layer2/control_bus/control_bus_decoder.dart';
 export 'src/protocols/layer2/dfu/dfu_decoder.dart';
 // 导出第三层协议（Control Bus）
-export 'src/protocols/layer3/control_bus/device_connection.dart';
-export 'src/protocols/layer3/control_bus/battery_status.dart';
-export 'src/protocols/layer3/control_bus/electrical_metrics.dart';
-export 'src/protocols/layer3/control_bus/device_status.dart';
-export 'src/protocols/layer3/control_bus/operating_mode.dart';
-export 'src/protocols/layer3/control_bus/speed_gear.dart';
+export 'src/protocols/layer3/control_bus/get_device_connection.dart';
+export 'src/protocols/layer3/control_bus/get_battery_status.dart';
+export 'src/protocols/layer3/control_bus/get_electrical_metrics.dart';
+export 'src/protocols/layer3/control_bus/get_device_status.dart';
+export 'src/protocols/layer3/control_bus/get_operating_mode.dart';
+export 'src/protocols/layer3/control_bus/get_speed_gear.dart';
 export 'src/protocols/layer3/control_bus/set_pushrod_speed.dart';
 export 'src/protocols/layer3/control_bus/set_speed.dart';
 export 'src/protocols/layer3/control_bus/set_operating_mode.dart';

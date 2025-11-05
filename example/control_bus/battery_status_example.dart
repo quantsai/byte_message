@@ -5,15 +5,15 @@ import 'package:byte_message/byte_message.dart';
 /// 功能说明：
 /// - 生成第三层“电量与充电状态请求”的负载字节（空数组，第三层无负载）。
 /// - 构造一个模拟的第三层“电量与充电状态应答”负载（2 字节：电量百分比 u8 + 充电状态 u8）。
-/// - 使用 BatteryStatusRes.fromBytes 解析，并读取便捷属性 isCharging / isPluggedIn。
+/// - 使用 GetBatteryStatusRes.fromBytes 解析，并读取便捷属性 isCharging / isPluggedIn。
 ///
 /// 参数：无
 /// 返回：无（示例程序仅打印解析结果）
 void main() {
   // 1) 生成第三层“电量与充电状态请求”的负载字节
-  final req = BatteryStatusReq();
+  final req = GetBatteryStatusReq();
   final reqPayload = req.encode();
-  print('Layer3 BatteryStatusReq Payload: $reqPayload'); // []
+  print('Layer3 GetBatteryStatusReq Payload: $reqPayload'); // []
 
   // 2) 构造一个模拟的第三层“电量与充电状态应答”的负载
   // 字节布局：
@@ -30,7 +30,7 @@ void main() {
   final resPayload = <int>[batteryPercent, chargeStatus];
 
   // 3) 解析第三层应答
-  final res = BatteryStatusRes.fromBytes(resPayload);
+  final res = GetBatteryStatusRes.fromBytes(resPayload);
   print('Battery Percent: ${res.batteryPercent}%');
   print('Battery status: ${res.chargeStatus}');
 }

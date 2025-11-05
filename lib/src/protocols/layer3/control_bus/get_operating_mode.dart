@@ -9,7 +9,7 @@
 library byte_message.l3.control_bus.operating_mode;
 
 /// 第三层：功能模式请求
-class OperatingModeReq {
+class GetOperatingModeReq {
   /// 编码第三层请求负载
   ///
   /// 功能：功能模式请求在第三层无负载，返回空数组。
@@ -21,7 +21,7 @@ class OperatingModeReq {
 }
 
 /// 第三层：功能模式应答
-class OperatingModeRes {
+class GetOperatingModeRes {
   /// 功能模式（u8）
   /// 0x00 手动模式；0x01 自平衡模式（参见 control.md 定义）。
   final OperatingMode mode;
@@ -30,7 +30,7 @@ class OperatingModeRes {
   ///
   /// 参数：
   /// - mode：功能模式（u8，0..255）。
-  OperatingModeRes({required this.mode});
+  GetOperatingModeRes({required this.mode});
 
   /// 从第三层字节数组解析功能模式应答
   ///
@@ -40,7 +40,7 @@ class OperatingModeRes {
   /// 返回：OperatingModeRes
   /// 异常：
   /// - ArgumentError：当载荷长度不是 1 时抛出。
-  static OperatingModeRes fromBytes(List<int> bytes) {
+  static GetOperatingModeRes fromBytes(List<int> bytes) {
     if (bytes.length != 1) {
       throw ArgumentError(
         'Invalid L3 operating mode payload length: expected 1, got ${bytes.length}',
@@ -48,11 +48,11 @@ class OperatingModeRes {
     }
     final modeByte = bytes[0] & 0xFF; // u8
     final mode = OperatingMode.fromValue(modeByte);
-    return OperatingModeRes(mode: mode);
+    return GetOperatingModeRes(mode: mode);
   }
 
   @override
-  String toString() => 'OperatingModeRes{mode: $mode}';
+  String toString() => 'GetOperatingModeRes{mode: $mode}';
 }
 
 enum OperatingMode {

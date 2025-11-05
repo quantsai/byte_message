@@ -5,7 +5,7 @@
 /// - 应答负载：无（Ack-only）
 library byte_message.l3.control_bus.set_operating_mode;
 
-import 'package:byte_message/src/protocols/layer3/control_bus/operating_mode.dart';
+import 'package:byte_message/src/protocols/layer3/control_bus/get_operating_mode.dart';
 
 /// 设置操作模式请求（SetOperatingModeReq）
 class SetOperatingModeReq {

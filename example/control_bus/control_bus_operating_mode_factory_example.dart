@@ -14,13 +14,14 @@ void main() {
 
   // 1) 编码：功能模式请求（第三层负载为空）
   final requestBytes = factory.encodeOperatingModeReq();
-  print('Encode OperatingModeReq: $requestBytes');
+  print('Encode GetOperatingModeReq: $requestBytes');
 
   // 2) 解码：构造模拟的一层应答字节流（AckOK + 第三层载荷1字节）
   // 示例：模式 0x01（自平衡模式）
   final mode = 0x01;
   final l3Payload = <int>[mode];
-  final ackPacket = InterChipPacket(cmd: InterChipCmds.ackOk, payload: l3Payload);
+  final ackPacket =
+      InterChipPacket(cmd: InterChipCmds.ackOk, payload: l3Payload);
   final rawResponse = InterChipEncoder().encode(ackPacket);
 
   final res = factory.decodeOperatingModeRes(rawResponse);

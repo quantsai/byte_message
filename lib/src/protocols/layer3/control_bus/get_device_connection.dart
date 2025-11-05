@@ -15,7 +15,7 @@ import 'package:byte_message/src/utils/byte_packing.dart';
 /// 设备连接请求（第三层）
 ///
 /// 负责生成“请求连接”的第三层负载字节（与前两层解耦）
-class DeviceConnectionReq {
+class GetDeviceConnectionReq {
   /// 第三层协议的协议版本（u8），默认 0x02（TT01 协议版本）
   final int protocolVersion;
 
@@ -26,7 +26,7 @@ class DeviceConnectionReq {
   ///
   /// 异常：
   /// - [RangeError] 当 protocolVersion 超出 u8 范围（0..255）时抛出
-  DeviceConnectionReq({this.protocolVersion = 0x02}) {
+  GetDeviceConnectionReq({this.protocolVersion = 0x02}) {
     // 校验协议版本为 u8 范围
     ensureU8(protocolVersion, name: 'protocolVersion');
   }
@@ -43,7 +43,7 @@ class DeviceConnectionReq {
 /// 设备连接应答（第三层）
 ///
 /// 负责解析“请求连接”的第三层应答负载（与前两层解耦）
-class DeviceConnectionRes {
+class GetDeviceConnectionRes {
   /// 型号字符串（由 u8[12] ASCII 字节转换，并去除结尾 0x00 填充）
   final String model;
 
@@ -63,7 +63,7 @@ class DeviceConnectionRes {
   /// - [firmwareVersion] 固件版本（0..65535）
   /// - [hardwareVersion] 硬件版本（0..65535）
   /// - [serialNumberSegments] 长度应为 3 的列表，每个元素为 u32（0..4294967295）
-  DeviceConnectionRes({
+  GetDeviceConnectionRes({
     required this.model,
     required this.firmwareVersion,
     required this.hardwareVersion,
@@ -81,7 +81,7 @@ class DeviceConnectionRes {
   ///
   /// 异常：
   /// - [ArgumentError] 当长度不为 28 或字节不足时抛出
-  static DeviceConnectionRes fromBytes(List<int> bytes) {
+  static GetDeviceConnectionRes fromBytes(List<int> bytes) {
     const expectedLength = 12 + 2 + 2 + 4 * 3; // 28
     if (bytes.length != expectedLength) {
       throw ArgumentError(
@@ -117,7 +117,7 @@ class DeviceConnectionRes {
     final sn =
         '${padDecimalLeft(sn1Bytes, width: segmentWidth)}${padDecimalLeft(sn2Bytes, width: segmentWidth)}${padDecimalLeft(sn3Bytes, width: segmentWidth)}';
 
-    return DeviceConnectionRes(
+    return GetDeviceConnectionRes(
       model: model,
       firmwareVersion: fw,
       hardwareVersion: hw,
@@ -127,10 +127,8 @@ class DeviceConnectionRes {
 
   @override
   String toString() {
-    return 'DeviceConnectionRes(model="$model", fwBytes=$firmwareVersion, hw=$hardwareVersion, sn=$serialNumber)';
+    return 'GetDeviceConnectionRes(model="$model", fwBytes=$firmwareVersion, hw=$hardwareVersion, sn=$serialNumber)';
   }
-
- 
 }
 
 /// 工厂函数

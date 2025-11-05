@@ -17,12 +17,12 @@ import '../models/layer2/control_bus_models.dart';
 import '../protocols/layer1/inter_chip_encoder.dart';
 import '../protocols/layer1/inter_chip_decoder.dart';
 import '../protocols/layer2/control_bus/control_bus_encoder.dart';
-import '../protocols/layer3/control_bus/device_connection.dart';
-import '../protocols/layer3/control_bus/battery_status.dart';
-import '../protocols/layer3/control_bus/electrical_metrics.dart';
-import '../protocols/layer3/control_bus/device_status.dart';
-import '../protocols/layer3/control_bus/operating_mode.dart';
-import '../protocols/layer3/control_bus/speed_gear.dart';
+import '../protocols/layer3/control_bus/get_device_connection.dart';
+import '../protocols/layer3/control_bus/get_battery_status.dart';
+import '../protocols/layer3/control_bus/get_electrical_metrics.dart';
+import '../protocols/layer3/control_bus/get_device_status.dart';
+import '../protocols/layer3/control_bus/get_operating_mode.dart';
+import '../protocols/layer3/control_bus/get_speed_gear.dart';
 import '../protocols/layer3/control_bus/set_speed.dart';
 import '../protocols/layer3/control_bus/set_pushrod_speed.dart';
 import '../protocols/layer3/control_bus/set_operating_mode.dart';
@@ -56,7 +56,7 @@ class ControlBusFactory {
     int? flag,
   }) {
     // 1) Layer3：在内部创建请求对象并编码第三层负载
-    final request = DeviceConnectionReq(protocolVersion: protocolVersion);
+    final request = GetDeviceConnectionReq(protocolVersion: protocolVersion);
     final l3 = request.encode();
 
     // 2) Layer2 封装：CbCmd=0x10（连接请求），CbPayload=第三层负载
@@ -143,7 +143,7 @@ class ControlBusFactory {
   }
 
   /// 解码：设备连接应答（一次调用从一层原始字节流还原第三层模型）
-  DecodeResult<DeviceConnectionRes> decodeConnectionRes(List<int> rawData) {
+  DecodeResult<GetDeviceConnectionRes> decodeConnectionRes(List<int> rawData) {
     try {
       // 1) Layer1 解码
       final l1 = InterChipDecoder().decode(rawData);
@@ -152,7 +152,7 @@ class ControlBusFactory {
       }
 
       if (l1.cmd != InterChipCmds.ackOk) {
-        return DecodeResult<DeviceConnectionRes>(status: l1.cmd, data: null);
+        return DecodeResult<GetDeviceConnectionRes>(status: l1.cmd, data: null);
       }
 
       final l3 = l1.payload;
@@ -164,8 +164,8 @@ class ControlBusFactory {
       }
 
       // 4) Layer3 解码为业务模型
-      final resp = DeviceConnectionRes.fromBytes(l3);
-      return DecodeResult<DeviceConnectionRes>(status: l1.cmd, data: resp);
+      final resp = GetDeviceConnectionRes.fromBytes(l3);
+      return DecodeResult<GetDeviceConnectionRes>(status: l1.cmd, data: resp);
     } catch (e) {
       throw ArgumentError(e);
     }
@@ -184,7 +184,7 @@ class ControlBusFactory {
   /// - List<int>：完整的一层字节流，可直接发送。
   List<int> encodeBatteryStatusReq({int? flag}) {
     // 1) Layer3：创建请求对象并编码第三层负载（空数组）
-    final l3Payload = BatteryStatusReq().encode(); // []
+    final l3Payload = GetBatteryStatusReq().encode(); // []
 
     // 2) Layer2 封装：CbCmd=0x30（电量/充电状态请求），CbPayload=第三层负载
     final l2Message = ControlBusMessage(
@@ -208,7 +208,7 @@ class ControlBusFactory {
   /// 返回：
   /// - 当一层 Cmd 为 AckOK 且第三层载荷长度为 2 时，返回解析后的 BatteryStatusRes；
   /// - 否则返回状态并置 data 为 null。
-  DecodeResult<BatteryStatusRes> decodeBatteryStatusRes(List<int> rawData) {
+  DecodeResult<GetBatteryStatusRes> decodeBatteryStatusRes(List<int> rawData) {
     // 1) Layer1 解码
     final l1 = InterChipDecoder().decode(rawData);
     if (l1 == null) {
@@ -216,7 +216,7 @@ class ControlBusFactory {
     }
 
     if (l1.cmd != InterChipCmds.ackOk) {
-      return DecodeResult<BatteryStatusRes>(status: l1.cmd, data: null);
+      return DecodeResult<GetBatteryStatusRes>(status: l1.cmd, data: null);
     }
 
     final l3 = l1.payload; // 按设备约定：AckOK 的 payload 为第三层载荷
@@ -229,8 +229,8 @@ class ControlBusFactory {
     }
 
     // 2) Layer3 解码为业务模型
-    final resp = BatteryStatusRes.fromBytes(l3);
-    return DecodeResult<BatteryStatusRes>(status: l1.cmd, data: resp);
+    final resp = GetBatteryStatusRes.fromBytes(l3);
+    return DecodeResult<GetBatteryStatusRes>(status: l1.cmd, data: resp);
   }
 
   /// 编码：电压与电流请求（一次调用产出最终一层字节流）
@@ -246,7 +246,7 @@ class ControlBusFactory {
   /// - List<int>：完整的一层字节流，可直接发送。
   List<int> encodeElectricalMetricsReq({int? flag}) {
     // 1) Layer3：创建请求对象并编码第三层负载（空数组）
-    final l3Payload = ElectricalMetricsReq().encode(); // []
+    final l3Payload = GetElectricalMetricsReq().encode(); // []
 
     // 2) Layer2 封装：CbCmd=0x36（电压/电流请求），CbPayload=第三层负载
     final l2Message = ControlBusMessage(
@@ -278,7 +278,7 @@ class ControlBusFactory {
   /// - List<int>：完整的一层字节流，可直接发送。
   List<int> encodeDeviceStatusReq({int? flag}) {
     // 1) Layer3：创建请求对象并编码第三层负载（空数组）
-    final l3Payload = DeviceStatusReq().encode(); // []
+    final l3Payload = GetDeviceStatusReq().encode(); // []
 
     // 2) Layer2 封装：CbCmd=0x37（机器状态请求），CbPayload=第三层负载
     final l2Message = ControlBusMessage(
@@ -310,7 +310,7 @@ class ControlBusFactory {
   /// - List<int>：完整的一层字节流，可直接发送。
   List<int> encodeOperatingModeReq({int? flag}) {
     // 1) Layer3：创建请求对象并编码第三层负载（空数组）
-    final l3Payload = OperatingModeReq().encode(); // []
+    final l3Payload = GetOperatingModeReq().encode(); // []
 
     // 2) Layer2 封装：CbCmd=0x3D（功能模式请求），CbPayload=第三层负载
     final l2Message = ControlBusMessage(
@@ -411,7 +411,7 @@ class ControlBusFactory {
   /// 返回：
   /// - 当一层 Cmd 为 AckOK 且第三层载荷长度为 5 时，返回解析后的 DeviceStatusRes；
   /// - 否则返回状态并置 data 为 null。
-  DecodeResult<DeviceStatusRes> decodeDeviceStatusRes(List<int> rawData) {
+  DecodeResult<GetDeviceStatusRes> decodeDeviceStatusRes(List<int> rawData) {
     // 1) Layer1 解码
     final l1 = InterChipDecoder().decode(rawData);
     if (l1 == null) {
@@ -419,7 +419,7 @@ class ControlBusFactory {
     }
 
     if (l1.cmd != InterChipCmds.ackOk) {
-      return DecodeResult<DeviceStatusRes>(status: l1.cmd, data: null);
+      return DecodeResult<GetDeviceStatusRes>(status: l1.cmd, data: null);
     }
 
     final l3 = l1.payload; // AckOK 的 payload 为第三层载荷
@@ -432,8 +432,8 @@ class ControlBusFactory {
     }
 
     // 2) Layer3 解码为业务模型
-    final resp = DeviceStatusRes.fromBytes(l3);
-    return DecodeResult<DeviceStatusRes>(status: l1.cmd, data: resp);
+    final resp = GetDeviceStatusRes.fromBytes(l3);
+    return DecodeResult<GetDeviceStatusRes>(status: l1.cmd, data: resp);
   }
 
   /// 编码：速度档位请求（一次调用产出最终一层字节流）
@@ -449,7 +449,7 @@ class ControlBusFactory {
   /// - List<int>：完整的一层字节流，可直接发送。
   List<int> encodeSpeedGearReq({int? flag}) {
     // 1) Layer3：创建请求对象并编码第三层负载（空数组）
-    final l3Payload = SpeedGearReq().encode(); // []
+    final l3Payload = GetSpeedGearReq().encode(); // []
 
     // 2) Layer2 封装：CbCmd=0x3E（速度档位请求），CbPayload=第三层负载
     final l2Message = ControlBusMessage(
@@ -473,7 +473,7 @@ class ControlBusFactory {
   /// 返回：
   /// - 当一层 Cmd 为 AckOK 且第三层载荷长度为 1 时，返回解析后的 SpeedGearRes；
   /// - 否则返回状态并置 data 为 null。
-  DecodeResult<SpeedGearRes> decodeSpeedGearRes(List<int> rawData) {
+  DecodeResult<GetSpeedGearRes> decodeSpeedGearRes(List<int> rawData) {
     // 1) Layer1 解码
     final l1 = InterChipDecoder().decode(rawData);
     if (l1 == null) {
@@ -481,7 +481,7 @@ class ControlBusFactory {
     }
 
     if (l1.cmd != InterChipCmds.ackOk) {
-      return DecodeResult<SpeedGearRes>(status: l1.cmd, data: null);
+      return DecodeResult<GetSpeedGearRes>(status: l1.cmd, data: null);
     }
 
     final l3 = l1.payload; // AckOK 的 payload 为第三层载荷
@@ -494,8 +494,8 @@ class ControlBusFactory {
     }
 
     // 2) Layer3 解码为业务模型
-    final resp = SpeedGearRes.fromBytes(l3);
-    return DecodeResult<SpeedGearRes>(status: l1.cmd, data: resp);
+    final resp = GetSpeedGearRes.fromBytes(l3);
+    return DecodeResult<GetSpeedGearRes>(status: l1.cmd, data: resp);
   }
 
   /// 解码：功能模式应答（一次调用从一层原始字节流还原第三层模型）
@@ -503,7 +503,7 @@ class ControlBusFactory {
   /// 返回：
   /// - 当一层 Cmd 为 AckOK 且第三层载荷长度为 1 时，返回解析后的 OperatingModeRes；
   /// - 否则返回状态并置 data 为 null。
-  DecodeResult<OperatingModeRes> decodeOperatingModeRes(List<int> rawData) {
+  DecodeResult<GetOperatingModeRes> decodeOperatingModeRes(List<int> rawData) {
     // 1) Layer1 解码
     final l1 = InterChipDecoder().decode(rawData);
     if (l1 == null) {
@@ -511,7 +511,7 @@ class ControlBusFactory {
     }
 
     if (l1.cmd != InterChipCmds.ackOk) {
-      return DecodeResult<OperatingModeRes>(status: l1.cmd, data: null);
+      return DecodeResult<GetOperatingModeRes>(status: l1.cmd, data: null);
     }
 
     final l3 = l1.payload; // AckOK 的 payload 为第三层载荷
@@ -524,8 +524,8 @@ class ControlBusFactory {
     }
 
     // 2) Layer3 解码为业务模型
-    final resp = OperatingModeRes.fromBytes(l3);
-    return DecodeResult<OperatingModeRes>(status: l1.cmd, data: resp);
+    final resp = GetOperatingModeRes.fromBytes(l3);
+    return DecodeResult<GetOperatingModeRes>(status: l1.cmd, data: resp);
   }
 
   /// 解码：设置速度应答（一次调用从一层原始字节流还原第三层模型）
@@ -692,7 +692,8 @@ class ControlBusFactory {
     int? flag,
   }) {
     // 1) Layer3：创建请求对象并编码第三层负载（s16 BE * 3）
-    final l3Payload = SetJoystickReq(x: x, y: y, z: z).encode(); // [X(2), Y(2), Z(2)]
+    final l3Payload =
+        SetJoystickReq(x: x, y: y, z: z).encode(); // [X(2), Y(2), Z(2)]
 
     // 2) Layer2 封装：CbCmd=0x81（设置摇杆），CbPayload=第三层负载
     final l2Message = ControlBusMessage(
@@ -807,7 +808,7 @@ class ControlBusFactory {
   /// 返回：
   /// - 当一层 Cmd 为 AckOK 且第三层载荷长度为 8 时，返回解析后的 ElectricalMetricsRes；
   /// - 否则返回状态并置 data 为 null。
-  DecodeResult<ElectricalMetricsRes> decodeElectricalMetricsRes(
+  DecodeResult<GetElectricalMetricsRes> decodeElectricalMetricsRes(
       List<int> rawData) {
     // 1) Layer1 解码
     final l1 = InterChipDecoder().decode(rawData);
@@ -816,7 +817,7 @@ class ControlBusFactory {
     }
 
     if (l1.cmd != InterChipCmds.ackOk) {
-      return DecodeResult<ElectricalMetricsRes>(status: l1.cmd, data: null);
+      return DecodeResult<GetElectricalMetricsRes>(status: l1.cmd, data: null);
     }
 
     final l3 = l1.payload; // AckOK 的 payload 为第三层载荷
@@ -829,7 +830,7 @@ class ControlBusFactory {
     }
 
     // 2) Layer3 解码为业务模型
-    final resp = ElectricalMetricsRes.fromBytes(l3);
-    return DecodeResult<ElectricalMetricsRes>(status: l1.cmd, data: resp);
+    final resp = GetElectricalMetricsRes.fromBytes(l3);
+    return DecodeResult<GetElectricalMetricsRes>(status: l1.cmd, data: resp);
   }
 }

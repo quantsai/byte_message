@@ -14,7 +14,7 @@ import 'package:byte_message/src/utils/byte_packing.dart';
 ///
 /// 负责生成“电压与电流”请求的第三层负载字节。
 /// 注意：该请求在第三层无负载（空数组）。
-class ElectricalMetricsReq {
+class GetElectricalMetricsReq {
   /// 生成第三层请求负载（空内容）
   ///
   /// 返回：
@@ -27,7 +27,7 @@ class ElectricalMetricsReq {
 /// 电压与电流应答（第三层）
 ///
 /// 负责解析“电压与电流”请求的第三层应答负载：电压（mV）与电流（mA），均为 s32（签名32位，大端）。
-class ElectricalMetricsRes {
+class GetElectricalMetricsRes {
   /// 电压（毫伏，mV），签名 32 位整型
   final int voltageMv;
 
@@ -39,7 +39,7 @@ class ElectricalMetricsRes {
   /// 参数：
   /// - [voltageMv] 电压（mV，s32）
   /// - [currentMa] 电流（mA，s32）
-  ElectricalMetricsRes({required this.voltageMv, required this.currentMa});
+  GetElectricalMetricsRes({required this.voltageMv, required this.currentMa});
 
   /// 从第三层应答字节解析模型
   ///
@@ -48,11 +48,11 @@ class ElectricalMetricsRes {
   ///   前 4 字节为电压（mV，s32 BE），后 4 字节为电流（mA，s32 BE）。
   ///
   /// 返回：
-  /// - [ElectricalMetricsRes] 解析后的应答数据模型
+  /// - [GetElectricalMetricsRes] 解析后的应答数据模型
   ///
   /// 异常：
   /// - [ArgumentError] 当长度不为 8 或字节不足时抛出
-  static ElectricalMetricsRes fromBytes(List<int> bytes) {
+  static GetElectricalMetricsRes fromBytes(List<int> bytes) {
     const expectedLength = 8;
     if (bytes.length < expectedLength) {
       throw ArgumentError(
@@ -64,11 +64,11 @@ class ElectricalMetricsRes {
     final voltage = readU32BE(bytes.sublist(0, 4));
     final current = readU32BE(bytes.sublist(4, 8));
 
-    return ElectricalMetricsRes(voltageMv: voltage, currentMa: current);
+    return GetElectricalMetricsRes(voltageMv: voltage, currentMa: current);
   }
 
   @override
   String toString() {
-    return 'ElectricalMetricsRes(voltageMv=$voltageMv, currentMa=$currentMa)';
+    return 'GetElectricalMetricsRes(voltageMv=$voltageMv, currentMa=$currentMa)';
   }
 }

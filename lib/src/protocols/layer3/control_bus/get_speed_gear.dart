@@ -47,7 +47,7 @@ enum SpeedGear {
 }
 
 /// 第三层：速度档位请求
-class SpeedGearReq {
+class GetSpeedGearReq {
   /// 编码第三层请求负载
   ///
   /// 功能：速度档位请求在第三层无负载，返回空数组。
@@ -59,7 +59,7 @@ class SpeedGearReq {
 }
 
 /// 第三层：速度档位应答
-class SpeedGearRes {
+class GetSpeedGearRes {
   /// 档位枚举
   final SpeedGear gear;
 
@@ -67,7 +67,7 @@ class SpeedGearRes {
   ///
   /// 参数：
   /// - gear：速度档位枚举
-  const SpeedGearRes({required this.gear});
+  const GetSpeedGearRes({required this.gear});
 
   /// 从第三层字节数组解析速度档位应答
   ///
@@ -77,7 +77,7 @@ class SpeedGearRes {
   /// 返回：SpeedGearRes
   /// 异常：
   /// - ArgumentError：当载荷长度不是 1 或档位值不在 0x00..0x05 时抛出。
-  static SpeedGearRes fromBytes(List<int> bytes) {
+  static GetSpeedGearRes fromBytes(List<int> bytes) {
     if (bytes.length != 1) {
       throw ArgumentError(
         'Invalid L3 speed gear payload length: expected 1, got ${bytes.length}',
@@ -85,10 +85,10 @@ class SpeedGearRes {
     }
     final v = bytes[0] & 0xFF; // u8
     final gear = SpeedGear.fromValue(v);
-    return SpeedGearRes(gear: gear);
+    return GetSpeedGearRes(gear: gear);
   }
 
   @override
   String toString() =>
-      'SpeedGearRes{gear: ${gear.name}(0x${gear.value.toRadixString(16)})}';
+      'GetSpeedGearRes{gear: ${gear.name}(0x${gear.value.toRadixString(16)})}';
 }

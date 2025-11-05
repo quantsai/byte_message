@@ -14,19 +14,21 @@ void main() {
 
   // 1) 编码：速度档位请求（第三层负载为空）
   final requestBytes = factory.encodeSpeedGearReq();
-  print('Encode SpeedGearReq: $requestBytes');
+  print('Encode GetSpeedGearReq: $requestBytes');
 
   // 2) 解码：构造模拟的一层应答字节流（AckOK + 第三层载荷1字节）
   // 示例：档位 0x03（3 档）
   final gearU8 = 0x03;
   final l3Payload = <int>[gearU8];
-  final ackPacket = InterChipPacket(cmd: InterChipCmds.ackOk, payload: l3Payload);
+  final ackPacket =
+      InterChipPacket(cmd: InterChipCmds.ackOk, payload: l3Payload);
   final rawResponse = InterChipEncoder().encode(ackPacket);
 
   final res = factory.decodeSpeedGearRes(rawResponse);
   if (res.data != null) {
     final d = res.data!;
     print('Decode.status: ${res.status}');
-    print('SpeedGear(enum): ${d.gear.name} (u8=0x${d.gear.value.toRadixString(16)})');
+    print(
+        'SpeedGear(enum): ${d.gear.name} (u8=0x${d.gear.value.toRadixString(16)})');
   }
 }

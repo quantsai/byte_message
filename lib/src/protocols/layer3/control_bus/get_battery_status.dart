@@ -14,7 +14,7 @@ import 'package:byte_message/src/utils/validation.dart';
 ///
 /// 负责生成“电量与充电状态”请求的第三层负载字节。
 /// 注意：该请求在第三层无负载（空数组）。
-class BatteryStatusReq {
+class GetBatteryStatusReq {
   /// 生成第三层请求负载（空内容）
   ///
   /// 返回：
@@ -27,7 +27,7 @@ class BatteryStatusReq {
 /// 电量与充电状态应答（第三层）
 ///
 /// 负责解析“电量与充电状态”请求的第三层应答负载：电量百分比（u8）与充电状态（u8）。
-class BatteryStatusRes {
+class GetBatteryStatusRes {
   /// 电量百分比（0..100）
   final int batteryPercent;
 
@@ -46,7 +46,8 @@ class BatteryStatusRes {
   /// 参数：
   /// - [batteryPercent] 电量百分比（0..100）
   /// - [chargeStatus] 充电状态（u8，0..255）
-  BatteryStatusRes({required this.batteryPercent, required this.chargeStatus});
+  GetBatteryStatusRes(
+      {required this.batteryPercent, required this.chargeStatus});
 
   /// 是否正在充电（chargeStatus 的 bit0）
   // bool get isCharging => (chargeStatus & 0x01) != 0;
@@ -61,12 +62,12 @@ class BatteryStatusRes {
   ///   第 0 字节为电量百分比（u8，0..100），第 1 字节为充电状态（u8，按位定义）。
   ///
   /// 返回：
-  /// - [BatteryStatusRes] 解析后的应答数据模型
+  /// - [GetBatteryStatusRes] 解析后的应答数据模型
   ///
   /// 异常：
   /// - [ArgumentError] 当长度不为 2 或字节不足时抛出
   /// - [RangeError] 当电量百分比超出 0..100 或充电状态超出 u8 范围时抛出
-  static BatteryStatusRes fromBytes(List<int> bytes) {
+  static GetBatteryStatusRes fromBytes(List<int> bytes) {
     const expectedLength = 2;
     if (bytes.length < expectedLength) {
       throw ArgumentError(
@@ -87,7 +88,8 @@ class BatteryStatusRes {
 
     final status = parseChargeStatus(statusByte, percentByte);
 
-    return BatteryStatusRes(batteryPercent: percentByte, chargeStatus: status);
+    return GetBatteryStatusRes(
+        batteryPercent: percentByte, chargeStatus: status);
   }
 
   /// 将原始充电状态字节与电量百分比映射为业务枚举（ChargeStatus）

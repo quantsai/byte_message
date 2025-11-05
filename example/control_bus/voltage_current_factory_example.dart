@@ -13,7 +13,7 @@ void main() {
 
   // 1) 编码：电压与电流请求（第三层负载为空）
   final requestBytes = factory.encodeElectricalMetricsReq();
-  print('Encode ElectricalMetricsReq: $requestBytes');
+  print('Encode GetElectricalMetricsReq: $requestBytes');
 
   // 2) 解码：构造模拟的一层应答字节流（AckOK + 第三层载荷8字节）
   // 示例一：电压 12000 mV（0x00002EE0），电流 -500 mA（0xFFFFFE0C，按 s32 BE）

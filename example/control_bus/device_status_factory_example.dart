@@ -14,7 +14,7 @@ void main() {
 
   // 1) 编码：机器状态请求（第三层负载为空）
   final requestBytes = factory.encodeDeviceStatusReq();
-  print('Encode DeviceStatusReq: $requestBytes');
+  print('Encode GetDeviceStatusReq: $requestBytes');
 
   // 2) 解码：构造模拟的一层应答字节流（AckOK + 第三层载荷5字节）
   // 示例：状态 0x00（OK），错误码 0x00000000

@@ -14,7 +14,7 @@ import 'package:byte_message/src/utils/byte_packing.dart';
 ///
 /// 负责生成“机器状态”请求的第三层负载字节。
 /// 注意：该请求在第三层无负载（空数组）。
-class DeviceStatusReq {
+class GetDeviceStatusReq {
   /// 生成第三层请求负载（空内容）
   ///
   /// 返回：
@@ -27,7 +27,7 @@ class DeviceStatusReq {
 /// 机器状态应答（第三层）
 ///
 /// 负责解析“机器状态”请求的第三层应答负载：机器状态（u8）与错误码（u32 BE）。
-class DeviceStatusRes {
+class GetDeviceStatusRes {
   /// 机器状态（u8）
   final DeviceStatus deviceStatus;
 
@@ -39,7 +39,7 @@ class DeviceStatusRes {
   /// 参数：
   /// - [deviceStatus] 机器状态（u8）
   /// - [errorCode] 错误码（u32 BE，无符号）
-  DeviceStatusRes({required this.deviceStatus, required this.errorCode});
+  GetDeviceStatusRes({required this.deviceStatus, required this.errorCode});
 
   /// 从第三层应答字节解析模型
   ///
@@ -48,11 +48,11 @@ class DeviceStatusRes {
   ///   第 0 字节为机器状态（u8），第 1..4 字节为错误码（u32 BE）。
   ///
   /// 返回：
-  /// - [DeviceStatusRes] 解析后的应答数据模型
+  /// - [GetDeviceStatusRes] 解析后的应答数据模型
   ///
   /// 异常：
   /// - [ArgumentError] 当长度不为 5 或字节不足时抛出
-  static DeviceStatusRes fromBytes(List<int> bytes) {
+  static GetDeviceStatusRes fromBytes(List<int> bytes) {
     const expectedLength = 5;
     if (bytes.length < expectedLength) {
       throw ArgumentError(
@@ -64,12 +64,12 @@ class DeviceStatusRes {
     final deviceStatus = DeviceStatus.fromValue(statusByte); // 解析枚举值
     final error = readU32BE(bytes.sublist(1, 5)); // u32 BE
 
-    return DeviceStatusRes(deviceStatus: deviceStatus, errorCode: error);
+    return GetDeviceStatusRes(deviceStatus: deviceStatus, errorCode: error);
   }
 
   @override
   String toString() {
-    return 'DeviceStatusRes(deviceStatus=$deviceStatus, errorCode=$errorCode)';
+    return 'GetDeviceStatusRes(deviceStatus=$deviceStatus, errorCode=$errorCode)';
   }
 }
 

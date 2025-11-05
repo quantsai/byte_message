@@ -5,7 +5,7 @@
 /// - 应答负载：无（Ack-only）
 library byte_message.l3.control_bus.set_speed_gear;
 
-import 'package:byte_message/src/protocols/layer3/control_bus/speed_gear.dart';
+import 'package:byte_message/src/protocols/layer3/control_bus/get_speed_gear.dart';
 
 /// 设置速度档位请求（SetSpeedGearReq）
 class SetSpeedGearReq {

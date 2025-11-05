@@ -14,12 +14,13 @@ void main() {
 
   // 1) 编码：电量与充电状态请求（第三层负载为空）
   final requestBytes = factory.encodeBatteryStatusReq();
-  print('Encode BatteryStatusReq: $requestBytes');
+  print('Encode GetBatteryStatusReq: $requestBytes');
 
   // 2) 解码：构造模拟的一层应答字节流（AckOK + 第三层载荷2字节）
   // 示例一：电量 85%，状态 0x03（bit0=1充电中 + bit1=1已插电）
   final l3Payload1 = <int>[85, 0x03];
-  final ackPacket1 = InterChipPacket(cmd: InterChipCmds.ackOk, payload: l3Payload1);
+  final ackPacket1 =
+      InterChipPacket(cmd: InterChipCmds.ackOk, payload: l3Payload1);
   final rawResponse1 = InterChipEncoder().encode(ackPacket1);
 
   final res1 = factory.decodeBatteryStatusRes(rawResponse1);
@@ -32,7 +33,8 @@ void main() {
 
   // 示例二：电量 100%，状态 0x00（未充电，按百分比判定为充满）
   final l3Payload2 = <int>[100, 0x00];
-  final ackPacket2 = InterChipPacket(cmd: InterChipCmds.ackOk, payload: l3Payload2);
+  final ackPacket2 =
+      InterChipPacket(cmd: InterChipCmds.ackOk, payload: l3Payload2);
   final rawResponse2 = InterChipEncoder().encode(ackPacket2);
 
   final res2 = factory.decodeBatteryStatusRes(rawResponse2);
@@ -45,7 +47,8 @@ void main() {
 
   // 示例三：电量 90%，状态 0x02（仅插电、不充电，按规则判定为充满）
   final l3Payload3 = <int>[90, 0x02];
-  final ackPacket3 = InterChipPacket(cmd: InterChipCmds.ackOk, payload: l3Payload3);
+  final ackPacket3 =
+      InterChipPacket(cmd: InterChipCmds.ackOk, payload: l3Payload3);
   final rawResponse3 = InterChipEncoder().encode(ackPacket3);
 
   final res3 = factory.decodeBatteryStatusRes(rawResponse3);
