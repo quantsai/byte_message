@@ -30,7 +30,7 @@ import '../protocols/layer3/control_bus/set_speed_gear.dart';
 import '../protocols/layer3/control_bus/set_joystick.dart';
 import '../protocols/layer3/control_bus/set_fold_state.dart';
 import '../models/decode_result.dart';
-import '../models/layer2/control_bus_cmds.dart';
+import '../models/layer2/control_bus_cmd.dart';
 
 /// Control Bus 三层组合工厂
 // 移除特定类型的解码结果类，改用通用 DecodeResult<S, T>
