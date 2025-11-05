@@ -46,6 +46,7 @@ export 'src/protocols/layer3/control_bus/set_joystick.dart';
 export 'src/protocols/layer3/control_bus/set_fold_state.dart';
 // 导出第三层协议（DFU）
 export 'src/protocols/layer3/dfu/get_device_info.dart';
+export 'src/protocols/layer3/dfu/start_upgrade.dart';
 
 // 导出工厂类（按第二层协议分文件组织）
 export 'src/factories/control_bus_factory.dart';

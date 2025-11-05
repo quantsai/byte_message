@@ -48,25 +48,35 @@ class GetDeviceInfoReq {
 /// - DfuDevicePowerVolt u32
 class GetDeviceInfoRes {
   /// DFU 包版本（字符串版本号：MAJOR.MINOR.REVISION，由 u8 派生）
-  final String dfuPkgVersion;
+  final int dfuPkgVersion;
+
   /// Bootloader 版本（字符串版本号：MAJOR.MINOR.REVISION，由 u16 派生）
   final String bootloaderVersion;
+
   /// Bootloader 页数（u16）
   final int bootloaderPageCnt;
+
   /// 设备类型（u16）
   final int deviceType;
+
   /// 页编号（u32）
   final int pageNum;
+
   /// 页大小（u32）
   final int pageSize;
+
   /// ROM 版本（字符串版本号：MAJOR.MINOR.REVISION，依据 u32 的高三字节派生）
   final String romVersion;
+
   /// 厂商信息（u32）
   final int venderInfo;
+
   /// 硬件版本（字符串版本号：MAJOR.MINOR.REVISION，由 u16 派生）
   final String hardwareVersion;
+
   /// DFU 设备标志（u32）
   final int dfuDeviceFlag;
+
   /// DFU 设备电压（u32）
   final int dfuDevicePowerVolt;
 
@@ -124,14 +134,16 @@ class GetDeviceInfoRes {
     // - u16 使用 formatVersionU16(MAJOR.MINOR.REVISION)
     // - u8 仅有一个字节，表达为 "<value>.0.0"
     // - u32 按 BE 将高三字节作为 MAJOR.MINOR.REVISION（三段版本），忽略最低字节
-    final dfuPkgVersion = '${dfuPkgVersionBytes[0] & 0xFF}.0.0';
-    final bootloaderVersion = formatVersionU16(readU16BE(bootloaderVersionBytes));
+    final dfuPkgVersion = dfuPkgVersionBytes[0] & 0xFF;
+    final bootloaderVersion =
+        formatVersionU16(readU16BE(bootloaderVersionBytes));
     final bootloaderPageCnt = readU16BE(bootloaderPageCntBytes);
     final deviceType = readU16BE(deviceTypeBytes);
     final pageNum = readU32BE(pageNumBytes);
     final pageSize = readU32BE(pageSizeBytes);
     final romV = readU32BE(romVersionBytes);
-    final romVersion = '${(romV >> 24) & 0xFF}.${(romV >> 16) & 0xFF}.${(romV >> 8) & 0xFF}';
+    final romVersion =
+        '${(romV >> 24) & 0xFF}.${(romV >> 16) & 0xFF}.${(romV >> 8) & 0xFF}';
     final venderInfo = readU32BE(venderInfoBytes);
     final hardwareVersion = formatVersionU16(readU16BE(hardwareVersionBytes));
     final dfuDeviceFlag = readU32BE(dfuDeviceFlagBytes);
