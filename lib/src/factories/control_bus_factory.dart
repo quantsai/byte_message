@@ -23,6 +23,7 @@ import '../protocols/layer3/control_bus/electrical_metrics.dart';
 import '../protocols/layer3/control_bus/device_status.dart';
 import '../protocols/layer3/control_bus/operating_mode.dart';
 import '../protocols/layer3/control_bus/speed_gear.dart';
+import '../protocols/layer3/control_bus/set_speed.dart';
 import '../models/decode_result.dart';
 import '../models/layer2/control_bus_cmds.dart';
 
@@ -257,6 +258,47 @@ class ControlBusFactory {
     return InterChipEncoder().encode(packet);
   }
 
+  /// 编码：设置速度请求（一次调用产出最终一层字节流）
+  ///
+  /// 功能描述：
+  /// - 将第三层“设置速度请求”的负载（线速度/角速度，均为 float32 BE）编码为二层 ControlBusMessage（CbCmd=0x41），
+  ///   再包装为一层 InterChipPacket（Cmd=0xF8 普通指令），最终输出完整字节序列。
+  ///
+  /// 参数说明：
+  /// - [linear] 线速度（m/s，float32）
+  /// - [angular] 角速度（r/s，float32）
+  /// - [flag] 可选：指定一层 Flag（u8）。若为 null，则编码器根据负载自动选择短帧/长帧并默认启用校验和。
+  ///
+  /// 返回值：
+  /// - List<int>：完整的一层字节流，可直接发送。
+  List<int> encodeSpeedControlReq({
+    required double linear,
+    required double angular,
+    int? flag,
+  }) {
+    // 1) Layer3：创建请求对象并编码第三层负载（float32 BE*2）
+    final l3Payload = SetSpeedReq(
+      linearVelocity: linear,
+      angularVelocity: angular,
+    ).encode(); // [lin(4), ang(4)]
+
+    // 2) Layer2 封装：CbCmd=0x41（设置速度请求），CbPayload=第三层负载
+    final l2Message = ControlBusMessage(
+      cbCmd: CbCmd.speedControlRequest,
+      cbPayload: l3Payload,
+    );
+    final l2 = ControlBusEncoder().encode(l2Message); // [0x41, ...]
+
+    // 3) Layer1 包装：Cmd=0xF8（普通指令），Payload=二层负载
+    final packet = InterChipPacket(
+      flag: flag,
+      cmd: InterChipCmds.normal,
+      payload: l2,
+    );
+
+    return InterChipEncoder().encode(packet);
+  }
+
   /// 解码：机器状态应答（一次调用从一层原始字节流还原第三层模型）
   ///
   /// 返回：
@@ -377,6 +419,36 @@ class ControlBusFactory {
     // 2) Layer3 解码为业务模型
     final resp = OperatingModeRes.fromBytes(l3);
     return DecodeResult<OperatingModeRes>(status: l1.cmd, data: resp);
+  }
+
+  /// 解码：设置速度应答（一次调用从一层原始字节流还原第三层模型）
+  ///
+  /// 返回：
+  /// - 当一层 Cmd 为 AckOK 且第三层载荷长度为 0 时，返回解析后的 SpeedControlAck；
+  /// - 否则返回状态并置 data 为 null。
+  DecodeResult<SetSpeedAck> decodeSpeedControlAck(List<int> rawData) {
+    // 1) Layer1 解码
+    final l1 = InterChipDecoder().decode(rawData);
+    if (l1 == null) {
+      throw ArgumentError('Invalid inter-chip packet: decode failed');
+    }
+
+    if (l1.cmd != InterChipCmds.ackOk) {
+      return DecodeResult<SetSpeedAck>(status: l1.cmd, data: null);
+    }
+
+    final l3 = l1.payload; // AckOK 的 payload 为第三层载荷
+
+    // 设置速度第三层载荷长度必须为 0（无第三层负载）
+    if (l3.isNotEmpty) {
+      throw ArgumentError(
+        'Invalid L3 speed control ack payload length: expected 0, got ${l3.length}',
+      );
+    }
+
+    // 2) Layer3 解码为业务模型（无载荷，仅 Ack）
+    final resp = SetSpeedAck.fromBytes(l3);
+    return DecodeResult<SetSpeedAck>(status: l1.cmd, data: resp);
   }
 
   /// 解码：电压与电流应答（一次调用从一层原始字节流还原第三层模型）

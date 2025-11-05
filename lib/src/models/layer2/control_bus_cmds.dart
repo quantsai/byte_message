@@ -30,4 +30,8 @@ class CbCmd {
   /// 速度档位请求（Speed Gear Request）
   /// CbCmd = 0x3E
   static const int speedGearRequest = 0x3E;
+
+  /// 速度控制请求（Speed Control Request）
+  /// CbCmd = 0x41
+  static const int speedControlRequest = 0x41;
 }

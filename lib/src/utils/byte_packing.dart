@@ -120,6 +120,32 @@ int u32FromBytes(List<int> bytes) {
   return (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
 }
 
+/// 把浮点数转换成 4 字节的大端序（BE）数组。
+///
+/// 参数：
+/// - [value] 浮点数（double）。
+/// 返回：
+/// - [List<int>] 4 字节的大端序数组（[b0, b1, b2, b3]）。
+List<int> packF32BE(double value) {
+  final b0 = (value.toInt() >> 24) & 0xFF;
+  final b1 = (value.toInt() >> 16) & 0xFF;
+  final b2 = (value.toInt() >> 8) & 0xFF;
+  final b3 = value.toInt() & 0xFF;
+  return [b0, b1, b2, b3];
+}
+
+/// 把浮点数转换成 2 字节的大端序（BE）数组。
+///
+/// 参数：
+/// - [value] 浮点数（double）。
+/// 返回：
+/// - [List<int>] 2 字节的大端序数组（[b0, b1]）。
+List<int> packF16BE(double value) {
+  final b0 = (value.toInt() >> 8) & 0xFF;
+  final b1 = value.toInt() & 0xFF;
+  return [b0, b1];
+}
+
 // 将 u32 值转换成一个固定宽度的字符串（默认 10 位），左侧补齐 '0'。
 /// 将十进制数字转换为固定宽度的字符串并在左侧补齐。
 ///
