@@ -41,6 +41,7 @@ export 'src/protocols/layer3/control_bus/speed_gear.dart';
 export 'src/protocols/layer3/control_bus/set_pushrod_speed.dart';
 export 'src/protocols/layer3/control_bus/set_speed.dart';
 export 'src/protocols/layer3/control_bus/set_operating_mode.dart';
+export 'src/protocols/layer3/control_bus/set_speed_gear.dart';
 
 // 导出工厂类（按第二层协议分文件组织）
 export 'src/factories/control_bus_factory.dart';

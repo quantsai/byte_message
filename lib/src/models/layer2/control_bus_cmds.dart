@@ -42,4 +42,8 @@ class CbCmd {
   /// 功能模式控制请求（Operating Mode Control / Set Operating Mode Request）
   /// CbCmd = 0x4D
   static const int operatingModeControlRequest = 0x4D;
+
+  /// 速度档位控制请求（Speed Gear Control / Set Speed Gear Request）
+  /// CbCmd = 0x4E
+  static const int speedGearControlRequest = 0x4E;
 }
