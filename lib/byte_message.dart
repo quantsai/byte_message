@@ -37,6 +37,7 @@ export 'src/protocols/layer3/control_bus/battery_status.dart';
 export 'src/protocols/layer3/control_bus/electrical_metrics.dart';
 export 'src/protocols/layer3/control_bus/device_status.dart';
 export 'src/protocols/layer3/control_bus/operating_mode.dart';
+export 'src/protocols/layer3/control_bus/speed_gear.dart';
 
 // 导出工厂类（按第二层协议分文件组织）
 export 'src/factories/control_bus_factory.dart';
