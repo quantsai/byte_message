@@ -16,16 +16,18 @@ void main() {
   // 字段顺序：u8, u16, u16, u16, u32, u32, u32, u32, u16, u32, u32
   final payload = <int>[];
   payload.add(0x01); // DfuPkgVersion u8
-  payload.addAll(packU16BE(composeVersion(major: 1, minor: 2, revision: 3))); // BootloaderVersion u16
-  payload.addAll(packU16BE(0x0010)); // BootloaderPageCnt u16
-  payload.addAll(packU16BE(0x0001)); // DeviceType u16
-  payload.addAll(packU32BE(100)); // PageNum u32
-  payload.addAll(packU32BE(4096)); // PageSize u32
-  payload.addAll(packU32BE(0x01020304)); // RomVersion u32
-  payload.addAll(packU32BE(0x55667788)); // VenderInfo u32
-  payload.addAll(packU16BE(composeVersion(major: 2, minor: 0, revision: 1))); // HardwareVersion u16
-  payload.addAll(packU32BE(0x0000FFFF)); // DfuDeviceFlag u32
-  payload.addAll(packU32BE(12000)); // DfuDevicePowerVolt u32
+  payload.addAll([0x00, 0x00]); // BootloaderVersion u16
+  payload.addAll([0x00, 0x00]); // BootloaderPageCnt u16
+  payload.addAll([0x00, 0x00]); // DeviceType u16
+  payload.addAll([0x00, 0x00, 0x00, 0x00]); // PageNum u32
+  payload.addAll([0x00, 0x00, 0x00, 0x00]); // PageSize u32
+  // RomVersion u32（BE）：四字节 [b0,b1,b2,b3]，b0 不用，版本号 = b1.b2.b3
+  // 示例：[0x00,0x02,0x11,0x06] -> 2.17.06
+  payload.addAll([0x00, 0x02, 0x11, 0x06]); // RomVersion u32 -> 2.17.06
+  payload.addAll([0x00, 0x00, 0x00, 0x00]); // VenderInfo u32
+  payload.addAll([0x00, 0x00]); // HardwareVersion u16
+  payload.addAll([0x00, 0x00, 0xFF, 0xFF]); // DfuDeviceFlag u32
+  payload.addAll([0x00, 0x00, 0x04, 0x88]); // DfuDevicePowerVolt u32
 
   final ackPacket = InterChipPacket(
     cmd: InterChipCmds.ackOk,

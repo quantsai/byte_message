@@ -48,37 +48,37 @@ class GetDeviceInfoReq {
 /// - DfuDevicePowerVolt u32
 class GetDeviceInfoRes {
   /// DFU 包版本（字符串版本号：MAJOR.MINOR.REVISION，由 u8 派生）
-  final int dfuPkgVersion;
+  final List<int> dfuPkgVersion;
 
   /// Bootloader 版本（字符串版本号：MAJOR.MINOR.REVISION，由 u16 派生）
-  final String bootloaderVersion;
+  final List<int> bootloaderVersion;
 
   /// Bootloader 页数（u16）
-  final int bootloaderPageCnt;
+  final List<int> bootloaderPageCnt;
 
   /// 设备类型（u16）
-  final int deviceType;
+  final List<int> deviceType;
 
   /// 页编号（u32）
-  final int pageNum;
+  final List<int> pageNum;
 
   /// 页大小（u32）
-  final int pageSize;
+  final List<int> pageSize;
 
   /// ROM 版本（字符串版本号：MAJOR.MINOR.REVISION，依据 u32 的高三字节派生）
   final String romVersion;
 
   /// 厂商信息（u32）
-  final int venderInfo;
+  final List<int> venderInfo;
 
   /// 硬件版本（字符串版本号：MAJOR.MINOR.REVISION，由 u16 派生）
-  final String hardwareVersion;
+  final List<int> hardwareVersion;
 
   /// DFU 设备标志（u32）
-  final int dfuDeviceFlag;
+  final List<int> dfuDeviceFlag;
 
   /// DFU 设备电压（u32）
-  final int dfuDevicePowerVolt;
+  final List<int> dfuDevicePowerVolt;
 
   /// 构造函数
   ///
@@ -129,38 +129,26 @@ class GetDeviceInfoRes {
     final dfuDeviceFlagBytes = bytes.sublist(25, 29);
     final dfuDevicePowerVoltBytes = bytes.sublist(29, 33);
 
-    // 转换为最终内容
-    // 版本号转换规则参考 control_bus/get_device_connection.dart：
-    // - u16 使用 formatVersionU16(MAJOR.MINOR.REVISION)
-    // - u8 仅有一个字节，表达为 "<value>.0.0"
-    // - u32 按 BE 将高三字节作为 MAJOR.MINOR.REVISION（三段版本），忽略最低字节
-    final dfuPkgVersion = dfuPkgVersionBytes[0] & 0xFF;
-    final bootloaderVersion =
-        formatVersionU16(readU16BE(bootloaderVersionBytes));
-    final bootloaderPageCnt = readU16BE(bootloaderPageCntBytes);
-    final deviceType = readU16BE(deviceTypeBytes);
-    final pageNum = readU32BE(pageNumBytes);
-    final pageSize = readU32BE(pageSizeBytes);
-    final romV = readU32BE(romVersionBytes);
+    // 转换为最终内容（仅修改 ROM 版本解析规则）：
+    // BE 四字节 [b0,b1,b2,b3]，左边第一位 b0 不用，版本号为 b1.b2.b3，且第三段两位数左补零
+    final romMajor = romVersionBytes[1] & 0xFF;
+    final romMinor = romVersionBytes[2] & 0xFF;
+    final romRevision = romVersionBytes[3] & 0xFF;
     final romVersion =
-        '${(romV >> 24) & 0xFF}.${(romV >> 16) & 0xFF}.${(romV >> 8) & 0xFF}';
-    final venderInfo = readU32BE(venderInfoBytes);
-    final hardwareVersion = formatVersionU16(readU16BE(hardwareVersionBytes));
-    final dfuDeviceFlag = readU32BE(dfuDeviceFlagBytes);
-    final dfuDevicePowerVolt = readU32BE(dfuDevicePowerVoltBytes);
+        '$romMajor.$romMinor.${romRevision.toString().padLeft(2, '0')}';
 
     return GetDeviceInfoRes(
-      dfuPkgVersion: dfuPkgVersion,
-      bootloaderVersion: bootloaderVersion,
-      bootloaderPageCnt: bootloaderPageCnt,
-      deviceType: deviceType,
-      pageNum: pageNum,
-      pageSize: pageSize,
+      dfuPkgVersion: dfuPkgVersionBytes,
+      bootloaderVersion: bootloaderVersionBytes,
+      bootloaderPageCnt: bootloaderPageCntBytes,
+      deviceType: deviceTypeBytes,
+      pageNum: pageNumBytes,
+      pageSize: pageSizeBytes,
       romVersion: romVersion,
-      venderInfo: venderInfo,
-      hardwareVersion: hardwareVersion,
-      dfuDeviceFlag: dfuDeviceFlag,
-      dfuDevicePowerVolt: dfuDevicePowerVolt,
+      venderInfo: venderInfoBytes,
+      hardwareVersion: hardwareVersionBytes,
+      dfuDeviceFlag: dfuDeviceFlagBytes,
+      dfuDevicePowerVolt: dfuDevicePowerVoltBytes,
     );
   }
 
