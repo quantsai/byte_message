@@ -44,7 +44,10 @@ export 'src/protocols/layer3/control_bus/set_operating_mode.dart';
 export 'src/protocols/layer3/control_bus/set_speed_gear.dart';
 export 'src/protocols/layer3/control_bus/set_joystick.dart';
 export 'src/protocols/layer3/control_bus/set_fold_state.dart';
+// 导出第三层协议（DFU）
+export 'src/protocols/layer3/dfu/get_device_info.dart';
 
 // 导出工厂类（按第二层协议分文件组织）
 export 'src/factories/control_bus_factory.dart';
+export 'src/factories/dfu_factory.dart';
 export 'src/models/decode_result.dart';

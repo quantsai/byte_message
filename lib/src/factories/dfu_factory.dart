@@ -1,0 +1,84 @@
+/// DFU 三层组合工厂
+///
+/// 作用：按“第二层协议分文件”的组织方式，提供将三层协议（Layer1/Layer2/Layer3）在一次调用中完成编码或解码的能力。
+/// - 本文件聚合 DFU 相关的三层编解码流程（获取设备信息）。
+/// - 层次职责：
+///   - Layer3：业务载荷（例如获取设备信息请求的第三层负载为空，应答字段为 u8/u16/u32）
+///   - Layer2：DFU 子命令（DfuCmd）及其负载（DfuPayload）
+///   - Layer1：Inter-chip 包装帧（Flag/Len/LenH/Cmd/Payload/Checksum）
+library;
+
+import '../models/layer1/inter_chip_models.dart';
+import '../models/layer2/dfu_models.dart';
+import '../models/layer2/dfu_cmd.dart';
+import '../models/decode_result.dart';
+import '../protocols/layer1/inter_chip_encoder.dart';
+import '../protocols/layer1/inter_chip_decoder.dart';
+import '../protocols/layer2/dfu/dfu_encoder.dart';
+import '../protocols/layer3/dfu/get_device_info.dart';
+
+/// DFU 三层组合工厂
+class DfuFactory {
+  /// 编码：获取设备信息请求（一次调用产出最终一层字节流）
+  ///
+  /// 功能描述：
+  /// - 将第三层“获取设备信息请求”的负载（空数组）编码为二层 DfuMessage（DfuCmd=0x01, DfuVersion=0x01），
+  ///   再包装为一层 InterChipPacket（Cmd=0x20 DFU），最终输出完整字节序列。
+  ///
+  /// 参数说明：
+  /// - [flag] 可选：指定一层 Flag（u8）。若为 null，则编码器根据负载自动选择短帧/长帧并默认启用校验和。
+  ///
+  /// 返回值：
+  /// - List<int>：完整的一层字节流，可直接发送。
+  List<int> encodeGetDeviceInfoReq({int? flag}) {
+    // 1) Layer3：创建请求对象并编码第三层负载（空数组）
+    final l3Payload = GetDeviceInfoReq().encode(); // []
+
+    // 2) Layer2 封装：DfuCmd=0x01（获取设备信息），DfuVersion=0x01，DfuPayload=第三层负载
+    final l2Message = DfuMessage(
+      dfuCmd: DfuCmd.getDeviceInfo,
+      dfuVersion: 0x01,
+      dfuPayload: l3Payload,
+    );
+    final l2 = DfuEncoder().encode(l2Message); // [0x01, 0x01]
+
+    // 3) Layer1 包装：Cmd=0x20（DFU），Payload=二层负载
+    final packet = InterChipPacket(
+      flag: flag,
+      cmd: InterChipCmds.dfu,
+      payload: l2,
+    );
+
+    return InterChipEncoder().encode(packet);
+  }
+
+  /// 解码：获取设备信息应答（一次调用从一层原始字节流还原第三层模型）
+  ///
+  /// 返回：
+  /// - 当一层 Cmd 为 AckOK（0x02）且第三层载荷长度为 33 时，返回解析后的 GetDeviceInfoRes；
+  /// - 否则返回状态并置 data 为 null。
+  DecodeResult<GetDeviceInfoRes> decodeGetDeviceInfoRes(List<int> rawData) {
+    // 1) Layer1 解码
+    final l1 = InterChipDecoder().decode(rawData);
+    if (l1 == null) {
+      throw ArgumentError('Invalid inter-chip packet: decode failed');
+    }
+
+    if (l1.cmd != InterChipCmds.ackOk) {
+      return DecodeResult<GetDeviceInfoRes>(status: l1.cmd, data: null);
+    }
+
+    final l3 = l1.payload; // AckOK 的 payload 为第三层载荷
+
+    // 获取设备信息第三层载荷长度必须为 33（见文档）
+    if (l3.length < 33) {
+      throw ArgumentError(
+        'Invalid L3 DFU device info payload length: expected 33, got ${l3.length}',
+      );
+    }
+
+    // 2) Layer3 解码为业务模型
+    final resp = GetDeviceInfoRes.fromBytes(l3);
+    return DecodeResult<GetDeviceInfoRes>(status: l1.cmd, data: resp);
+  }
+}
