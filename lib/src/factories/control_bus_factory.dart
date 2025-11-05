@@ -28,6 +28,7 @@ import '../protocols/layer3/control_bus/set_pushrod_speed.dart';
 import '../protocols/layer3/control_bus/set_operating_mode.dart';
 import '../protocols/layer3/control_bus/set_speed_gear.dart';
 import '../protocols/layer3/control_bus/set_joystick.dart';
+import '../protocols/layer3/control_bus/set_fold_state.dart';
 import '../models/decode_result.dart';
 import '../models/layer2/control_bus_cmds.dart';
 
@@ -73,6 +74,72 @@ class ControlBusFactory {
     );
 
     return InterChipEncoder().encode(packet);
+  }
+
+  /// 编码：设置折叠/展开请求（一次调用产出最终一层字节流）
+  ///
+  /// 功能描述：
+  /// - 将第三层“设置折叠/展开请求”的负载（u8：0x00 折叠 / 0x01 展开）编码为二层 ControlBusMessage（CbCmd=0x82），
+  ///   再包装为一层 InterChipPacket（Cmd=0xF8 普通指令），最终输出完整字节序列。
+  ///
+  /// 参数说明：
+  /// - [state] 折叠/展开枚举（FoldState）
+  /// - [flag] 可选：指定一层 Flag（u8）。若为 null，则编码器根据负载自动选择短帧/长帧并默认启用校验和。
+  ///
+  /// 返回值：
+  /// - List<int>：完整的一层字节流，可直接发送。
+  List<int> encodeSetFoldStateReq({
+    required FoldState state,
+    int? flag,
+  }) {
+    // 1) Layer3：创建请求对象并编码第三层负载（u8 0/1）
+    final l3Payload = SetFoldStateReq(state: state).encode(); // [state]
+
+    // 2) Layer2 封装：CbCmd=0x82（设置折叠/展开），CbPayload=第三层负载
+    final l2Message = ControlBusMessage(
+      cbCmd: CbCmd.foldControlRequest,
+      cbPayload: l3Payload,
+    );
+    final l2 = ControlBusEncoder().encode(l2Message); // [0x82, state]
+
+    // 3) Layer1 包装：Cmd=0xF8（普通指令），Payload=二层负载
+    final packet = InterChipPacket(
+      flag: flag,
+      cmd: InterChipCmds.normal,
+      payload: l2,
+    );
+
+    return InterChipEncoder().encode(packet);
+  }
+
+  /// 解码：设置折叠/展开应答（一次调用从一层原始字节流还原第三层模型）
+  ///
+  /// 返回：
+  /// - 当一层 Cmd 为 AckOK 且第三层载荷长度为 0 时，返回解析后的 SetFoldStateAck；
+  /// - 否则返回状态并置 data 为 null。
+  DecodeResult<SetFoldStateAck> decodeSetFoldStateAck(List<int> rawData) {
+    // 1) Layer1 解码
+    final l1 = InterChipDecoder().decode(rawData);
+    if (l1 == null) {
+      throw ArgumentError('Invalid inter-chip packet: decode failed');
+    }
+
+    if (l1.cmd != InterChipCmds.ackOk) {
+      return DecodeResult<SetFoldStateAck>(status: l1.cmd, data: null);
+    }
+
+    final l3 = l1.payload; // AckOK 的 payload 为第三层载荷
+
+    // 设置折叠/展开第三层载荷长度必须为 0（无第三层负载）
+    if (l3.isNotEmpty) {
+      throw ArgumentError(
+        'Invalid L3 set fold state ack payload length: expected 0, got ${l3.length}',
+      );
+    }
+
+    // 2) Layer3 解码为业务模型（无载荷，仅 Ack）
+    const resp = SetFoldStateAck();
+    return DecodeResult<SetFoldStateAck>(status: l1.cmd, data: resp);
   }
 
   /// 解码：设备连接应答（一次调用从一层原始字节流还原第三层模型）

@@ -50,4 +50,8 @@ class CbCmd {
   /// 摇杆控制请求（Joystick Control / Set Joystick Request）
   /// CbCmd = 0x81
   static const int joystickControlRequest = 0x81;
+
+  /// 折叠/展开控制请求（Fold/Unfold Control / Set Fold State Request）
+  /// CbCmd = 0x82
+  static const int foldControlRequest = 0x82;
 }
