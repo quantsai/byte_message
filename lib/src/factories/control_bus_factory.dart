@@ -21,6 +21,7 @@ import '../protocols/layer3/control_bus/device_connection.dart';
 import '../protocols/layer3/control_bus/battery_status.dart';
 import '../protocols/layer3/control_bus/electrical_metrics.dart';
 import '../models/decode_result.dart';
+import '../models/layer2/control_bus_cmds.dart';
 
 /// Control Bus 三层组合工厂
 // 移除特定类型的解码结果类，改用通用 DecodeResult<S, T>
@@ -50,9 +51,10 @@ class ControlBusFactory {
     final l3 = request.encode();
 
     // 2) Layer2 封装：CbCmd=0x10（连接请求），CbPayload=第三层负载
-    const int cbCmdConnectionRequest = 0x10;
-    final l2Message =
-        ControlBusMessage(cbCmd: cbCmdConnectionRequest, cbPayload: l3);
+    final l2Message = ControlBusMessage(
+      cbCmd: CbCmd.connectionRequest,
+      cbPayload: l3,
+    );
     final l2 = ControlBusEncoder().encode(l2Message); // [0x10, ...]
 
     // 3) Layer1 包装：Cmd=0xF8（普通指令），Payload=二层负载
@@ -110,9 +112,8 @@ class ControlBusFactory {
     final l3Payload = BatteryStatusReq().encode(); // []
 
     // 2) Layer2 封装：CbCmd=0x30（电量/充电状态请求），CbPayload=第三层负载
-    const int cbCmdBatteryStatusRequest = 0x30;
     final l2Message = ControlBusMessage(
-      cbCmd: cbCmdBatteryStatusRequest,
+      cbCmd: CbCmd.batteryStatusRequest,
       cbPayload: l3Payload,
     );
     final l2 = ControlBusEncoder().encode(l2Message); // [0x30]
@@ -173,9 +174,8 @@ class ControlBusFactory {
     final l3Payload = ElectricalMetricsReq().encode(); // []
 
     // 2) Layer2 封装：CbCmd=0x36（电压/电流请求），CbPayload=第三层负载
-    const int cbCmdElectricalMetricsRequest = 0x36;
     final l2Message = ControlBusMessage(
-      cbCmd: cbCmdElectricalMetricsRequest,
+      cbCmd: CbCmd.electricalMetricsRequest,
       cbPayload: l3Payload,
     );
     final l2 = ControlBusEncoder().encode(l2Message); // [0x36]
