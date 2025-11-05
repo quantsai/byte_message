@@ -22,4 +22,8 @@ class CbCmd {
   /// 机器状态请求（Device Status Request）
   /// CbCmd = 0x37
   static const int deviceStatusRequest = 0x37;
+
+  /// 功能模式请求（Operating Mode Request）
+  /// CbCmd = 0x3D
+  static const int operatingModeRequest = 0x3D;
 }
