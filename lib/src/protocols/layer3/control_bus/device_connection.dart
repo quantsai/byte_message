@@ -92,11 +92,11 @@ class DeviceConnectionRes {
     // 解析各字段（小端序）
     final modelBytes = bytes.sublist(0, 12);
 
-    final fwBytes = _readU16BE(bytes, 12);
-    final hwBytes = _readU16BE(bytes, 14);
-    final sn1Bytes = _readU32BE(bytes, 16);
-    final sn2Bytes = _readU32BE(bytes, 20);
-    final sn3Bytes = _readU32BE(bytes, 24);
+    final fwBytes = readU16BE(bytes.sublist(12, 14));
+    final hwBytes = readU16BE(bytes.sublist(14, 16));
+    final sn1Bytes = readU32BE(bytes.sublist(16, 20));
+    final sn2Bytes = readU32BE(bytes.sublist(20, 24));
+    final sn3Bytes = readU32BE(bytes.sublist(24, 28));
 
     /// 型号（字节 -> 字符串（ASCII），去除尾部 0x00）
     final trimmed = List<int>.from(modelBytes);
@@ -130,33 +130,7 @@ class DeviceConnectionRes {
     return 'DeviceConnectionRes(model="$model", fwBytes=$firmwareVersion, hw=$hardwareVersion, sn=$serialNumber)';
   }
 
-  /// 读取大端 u16
-  ///
-  /// 参数：
-  /// - [bytes] 源字节数组
-  /// - [offset] 起始偏移
-  /// 返回：
-  /// - [int] 0..65535 的无符号数值
-  static int _readU16BE(List<int> bytes, int offset) {
-    final b0 = bytes[offset];
-    final b1 = bytes[offset + 1];
-    return (b0 << 8) | b1;
-  }
-
-  /// 读取大端 u32
-  ///
-  /// 参数：
-  /// - [bytes] 源字节数组
-  /// - [offset] 起始偏移
-  /// 返回：
-  /// - [int] 0..4294967295 的无符号数值（注意 Dart int 为有符号，值范围足够）
-  static int _readU32BE(List<int> bytes, int offset) {
-    final b0 = bytes[offset];
-    final b1 = bytes[offset + 1];
-    final b2 = bytes[offset + 2];
-    final b3 = bytes[offset + 3];
-    return (b0 << 24) | (b1 << 16) | (b2 << 8) | b3;
-  }
+ 
 }
 
 /// 工厂函数

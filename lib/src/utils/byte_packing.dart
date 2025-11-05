@@ -75,20 +75,52 @@ List<int> packU16BE(int value) {
   return [b0, b1];
 }
 
-/// 将 u32 值按大端序打包为 4 字节。
+/// 从 4 字节的大端序（BE）数组读取一个无符号 32 位整数（U32）。
+///
+/// 功能：
+/// - 将 [bytes] 的 4 个字节当作 BE 序（高字节在前），组合为一个十进制整型数值（0..4294967295）。
 ///
 /// 参数：
-/// - [value] 0..4294967295 的无符号数。
+/// - [bytes] 至少包含 4 个字节，按 BE 顺序排列：[b0, b1, b2, b3]。
+///
 /// 返回：
-/// - [List<int>] [b0, b1, b2, b3]，其中 b0 为最高字节，b3 为最低字节。
-List<int> packU32BE(int value) {
-  final b0 = (value >> 24) & 0xFF;
-  final b1 = (value >> 16) & 0xFF;
-  final b2 = (value >> 8) & 0xFF;
-  final b3 = value & 0xFF;
-  return [b0, b1, b2, b3];
+/// - [int] 无符号 32 位整数值（U32）。
+int readU32BE(List<int> bytes) {
+  if (bytes.length < 4) {
+    throw ArgumentError('readU32BE requires 4 bytes, got ${bytes.length}');
+  }
+  final b0 = bytes[0] & 0xFF;
+  final b1 = bytes[1] & 0xFF;
+  final b2 = bytes[2] & 0xFF;
+  final b3 = bytes[3] & 0xFF;
+  return (b0 << 24) | (b1 << 16) | (b2 << 8) | b3;
 }
 
+/// 从 2 字节的大端序（BE）数组读取一个无符号 16 位整数（U16）。
+///
+/// 功能：
+/// - 将 [bytes] 的 2 个字节当作 BE 序（高字节在前），组合为一个十进制整型数值（0..65535）。
+///
+/// 参数：
+/// - [bytes] 至少包含 2 个字节，按 BE 顺序排列：[b0, b1]。
+///
+/// 返回：
+/// - [int] 无符号 16 位整数值（U16）。
+int readU16BE(List<int> bytes) {
+  if (bytes.length < 2) {
+    throw ArgumentError('readU16BE requires 2 bytes, got ${bytes.length}');
+  }
+  final b0 = bytes[0] & 0xFF;
+  final b1 = bytes[1] & 0xFF;
+  return (b0 << 8) | b1;
+}
+
+// 将 u32 值转换成一个数字（0..4294967295）
+int u32FromBytes(List<int> bytes) {
+  return (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
+}
+
+// 将 u32 值转换成一个固定宽度的字符串（默认 10 位），左侧补齐 '0'。
 /// 将十进制数字转换为固定宽度的字符串并在左侧补齐。
 ///
 /// 用途：
