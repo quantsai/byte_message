@@ -10,6 +10,21 @@ import '../../utils/packet_utils.dart';
 /// - [normal]: 普通指令 (0xF8) - 用于常规通信
 /// - [dfu]: DFU指令 (0x20) - 用于设备固件升级过程
 enum InterChipCmds {
+  /// 强制同步应答（0x00）
+  ackForceSync(0x00),
+
+  /// 测试通讯应答（0x01）
+  ackTestCommunication(0x01),
+
+  /// OK应答，表示请求被正确执行（0x02）
+  ackOk(0x02),
+
+  /// Error应答，表示请求执行时出现问题（0x03）
+  ackError(0x03),
+
+  /// Invalid应答，表示请求包不完整或结构不正确（0xFF）
+  ackInvalid(0xFF),
+
   /// 普通指令 (0xF8)
   ///
   /// 使用 inter-chip 通讯协议的扩展模式，用于常规设备间通信
@@ -62,6 +77,16 @@ enum InterChipCmds {
   @override
   String toString() {
     switch (this) {
+      case InterChipCmds.ackForceSync:
+        return 'InterChipCmds.ackForceSync(0x${value.toRadixString(16)})';
+      case InterChipCmds.ackTestCommunication:
+        return 'InterChipCmds.ackTestCommunication(0x${value.toRadixString(16)})';
+      case InterChipCmds.ackOk:
+        return 'InterChipCmds.ackOk(0x${value.toRadixString(16)})';
+      case InterChipCmds.ackError:
+        return 'InterChipCmds.ackError(0x${value.toRadixString(16)})';
+      case InterChipCmds.ackInvalid:
+        return 'InterChipCmds.ackInvalid(0x${value.toRadixString(16)})';
       case InterChipCmds.normal:
         return 'InterChipCmds.normal(0x${value.toRadixString(16)})';
       case InterChipCmds.dfu:

@@ -1,6 +1,8 @@
 /// Inter-chip协议工具类
 library;
 
+import 'package:byte_message/src/models/layer1/inter_chip_models.dart';
+
 import '../constants/packet_constants.dart';
 
 /// 数据包处理工具类
@@ -80,13 +82,13 @@ class PacketUtils {
   /// [cmd] 命令字节值
   /// 返回true如果是应答命令
   static bool isResponseCommand(int cmd) {
-    // 简化实现：根据命令值判断是否为应答
-    // 实际项目中可以根据具体协议定义进行判断
-    return cmd == PacketConstants.RESPONSE_FORCE_SYNC ||
-        cmd == PacketConstants.RESPONSE_TEST_COMMUNICATION ||
-        cmd == PacketConstants.RESPONSE_OK ||
-        cmd == PacketConstants.RESPONSE_ERROR ||
-        cmd == PacketConstants.RESPONSE_INVALID;
+    // 使用强类型枚举进行判断：当能映射为 ResponseStatus 时即为应答
+    try {
+      InterChipCmds.fromValue(cmd);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   /// 检查是否为命令协议
@@ -191,8 +193,7 @@ class PacketUtils {
         analysis['totalLength'] = len;
       }
 
-      analysis['expectedPacketLength'] =
-          headerLength +
+      analysis['expectedPacketLength'] = headerLength +
           analysis['totalLength'] -
           1; // -1 because Cmd is included in totalLength
       analysis['actualPacketLength'] = data.length;

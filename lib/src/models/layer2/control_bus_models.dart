@@ -47,7 +47,6 @@ class ControlBusMessage {
     return ControlBusMessage(cbCmd: cbCmd, cbPayload: cbPayload);
   }
 
-
   @override
   String toString() =>
       'ControlBusMessage{cbCmd: 0x${cbCmd.toRadixString(16).padLeft(2, '0')}, cbPayload: $cbPayload}';

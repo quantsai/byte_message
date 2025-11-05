@@ -73,21 +73,6 @@ class PacketConstants {
 
   // ==================== 应答命令常量 ====================
 
-  /// 强制同步应答
-  static const int RESPONSE_FORCE_SYNC = 0x00;
-
-  /// 测试通讯应答
-  static const int RESPONSE_TEST_COMMUNICATION = 0x01;
-
-  /// OK应答，表示请求被正确执行
-  static const int RESPONSE_OK = 0x02;
-
-  /// Error应答，表示请求执行时出现问题
-  static const int RESPONSE_ERROR = 0x03;
-
-  /// Invalid应答，表示请求包不完整或结构不正确
-  static const int RESPONSE_INVALID = 0xFF;
-
   // ==================== 错误码常量 ====================
 
   /// 请求包的校验和不匹配

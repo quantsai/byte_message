@@ -2,7 +2,7 @@
 ///
 /// 本示例演示：
 /// 1) 生成第三层“设备连接请求”的负载字节（与第一层/第二层解耦）
-/// 2) 构造一个模拟的第三层应答负载（28 字节），并使用 DeviceConnectionResponse 解码
+/// 2) 构造一个模拟的第三层应答负载（28 字节），并使用 DeviceConnectionRes 解码
 /// 3) 按 control.md 中的固件/硬件版本规则（MAJOR << 8 | MINOR << 4 | REVISION）拆解版本号
 /// 4) 将型号字节转换为 ASCII 字符串、序列号三段连接为字符串
 import 'package:byte_message/byte_message.dart';
@@ -10,7 +10,7 @@ import 'package:byte_message/src/utils/byte_packing.dart';
 
 void main() {
   // 1) 生成第三层“设备连接请求”的负载字节（默认协议版本 0x02）
-  final request = DeviceConnectionRequest();
+  final request = DeviceConnectionReq();
   final requestPayload = request.encode();
   print('Layer3 Request Payload: $requestPayload'); // [0x02]
 
@@ -49,7 +49,7 @@ void main() {
       'Layer3 Response Payload (len=${responsePayload.length}): $responsePayload');
 
   // 3) 解码第三层应答
-  final resp = DeviceConnectionResponse.fromBytes(responsePayload);
+  final resp = DeviceConnectionRes.fromBytes(responsePayload);
   print('mo: ${resp.model}');
   print('fw: ${resp.firmwareVersion}');
   print('hw: ${resp.hardwareVersion}');

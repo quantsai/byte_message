@@ -8,8 +8,7 @@ import 'inter_chip_encoder.dart';
 ///
 /// 负责将二进制数据解码为InterChipPacket对象
 /// 支持标准帧和长帧格式的解码
-class InterChipDecoder
-    implements Layer1PacketDecoder<InterChipPacket> {
+class InterChipDecoder implements Layer1PacketDecoder<InterChipPacket> {
   /// 构造函数（已移除配置依赖，采用固定的解码行为）
   const InterChipDecoder();
 

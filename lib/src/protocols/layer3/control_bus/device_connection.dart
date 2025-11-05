@@ -15,7 +15,7 @@ import 'package:byte_message/src/utils/byte_packing.dart';
 /// 设备连接请求（第三层）
 ///
 /// 负责生成“请求连接”的第三层负载字节（与前两层解耦）
-class DeviceConnectionRequest {
+class DeviceConnectionReq {
   /// 第三层协议的协议版本（u8），默认 0x02（TT01 协议版本）
   final int protocolVersion;
 
@@ -26,7 +26,7 @@ class DeviceConnectionRequest {
   ///
   /// 异常：
   /// - [RangeError] 当 protocolVersion 超出 u8 范围（0..255）时抛出
-  DeviceConnectionRequest({this.protocolVersion = 0x02}) {
+  DeviceConnectionReq({this.protocolVersion = 0x02}) {
     // 校验协议版本为 u8 范围
     ensureU8(protocolVersion, name: 'protocolVersion');
   }
@@ -43,7 +43,7 @@ class DeviceConnectionRequest {
 /// 设备连接应答（第三层）
 ///
 /// 负责解析“请求连接”的第三层应答负载（与前两层解耦）
-class DeviceConnectionResponse {
+class DeviceConnectionRes {
   /// 型号字符串（由 u8[12] ASCII 字节转换，并去除结尾 0x00 填充）
   final String model;
 
@@ -63,7 +63,7 @@ class DeviceConnectionResponse {
   /// - [firmwareVersion] 固件版本（0..65535）
   /// - [hardwareVersion] 硬件版本（0..65535）
   /// - [serialNumberSegments] 长度应为 3 的列表，每个元素为 u32（0..4294967295）
-  DeviceConnectionResponse({
+  DeviceConnectionRes({
     required this.model,
     required this.firmwareVersion,
     required this.hardwareVersion,
@@ -81,7 +81,7 @@ class DeviceConnectionResponse {
   ///
   /// 异常：
   /// - [ArgumentError] 当长度不为 28 或字节不足时抛出
-  static DeviceConnectionResponse fromBytes(List<int> bytes) {
+  static DeviceConnectionRes fromBytes(List<int> bytes) {
     const expectedLength = 12 + 2 + 2 + 4 * 3; // 28
     if (bytes.length != expectedLength) {
       throw ArgumentError(
@@ -117,7 +117,7 @@ class DeviceConnectionResponse {
     final sn =
         '${padDecimalLeft(sn1Bytes, width: segmentWidth)}${padDecimalLeft(sn2Bytes, width: segmentWidth)}${padDecimalLeft(sn3Bytes, width: segmentWidth)}';
 
-    return DeviceConnectionResponse(
+    return DeviceConnectionRes(
       model: model,
       firmwareVersion: fw,
       hardwareVersion: hw,
@@ -127,7 +127,7 @@ class DeviceConnectionResponse {
 
   @override
   String toString() {
-    return 'DeviceConnectionResponse(model="$model", fwBytes=$firmwareVersion, hw=$hardwareVersion, sn=$serialNumber)';
+    return 'DeviceConnectionRes(model="$model", fwBytes=$firmwareVersion, hw=$hardwareVersion, sn=$serialNumber)';
   }
 
   /// 读取大端 u16
@@ -158,3 +158,6 @@ class DeviceConnectionResponse {
     return (b0 << 24) | (b1 << 16) | (b2 << 8) | b3;
   }
 }
+
+/// 工厂函数
+/// 目前三层协议和第二层的cmd都是解耦的，通过工厂组合在一起

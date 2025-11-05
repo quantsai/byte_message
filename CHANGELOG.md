@@ -114,14 +114,14 @@
 
 - 新增文件：`src/protocols/layer3/control_bus/connection_protocol.dart`
 - 能力：
-  - 请求编码：实例方法 `DeviceConnectionRequest.encode()` 生成第三层请求负载；类属性 `protocolVersion`（默认 `0x02`，可配置）
-  - 应答解码：`DeviceConnectionResponse.fromBytes(List[int])` 解析第三层应答负载（默认使用大端序解析 u16/u32）；数据模型更新：
+  - 请求编码：实例方法 `DeviceConnectionReq.encode()` 生成第三层请求负载；类属性 `protocolVersion`（默认 `0x02`，可配置）
+  - 应答解码：`DeviceConnectionRes.fromBytes(List[int])` 解析第三层应答负载（默认使用大端序解析 u16/u32）；数据模型更新：
     - 型号改为字符串 `model`（由 u8[12] ASCII 转换并去除尾部 0x00）
     - 固件/硬件版本字段改为字符串（格式 `MAJOR.MINOR.REVISION`，由 u16 按 `MAJOR<<8 | MINOR<<4 | REVISION` 规则解析）
     - 序列号改为字符串（3 个 u32（大端）数字的十进制拼接）
 - 设计：第三层与前两层完全解耦，仅处理第三层内容字节；上层负责将第三层内容放入第二层/第一层载荷
 - 导出：`lib/byte_message.dart` 新增对该文件的 export
 - 测试：新增 `test/layer3_control_bus_connection_test.dart`，覆盖请求编码与应答解码的正常与异常场景
-  - 更新：测试已改为实例化 `DeviceConnectionRequest()` 并调用 `encode()`；非法版本在构造时抛出 `RangeError`
+  - 更新：测试已改为实例化 `DeviceConnectionReq()` 并调用 `encode()`；非法版本在构造时抛出 `RangeError`
   - 更新：响应模型断言改为 `resp.model` 字符串（不再检查原始 `modelBytes` 与 `modelString`）；版本断言为 `'0.0.0'`，序列号断言为 `'000'`
 - 验证：`dart analyze`（No issues found）与 `dart test -r expanded`（All tests passed）

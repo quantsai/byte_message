@@ -10,21 +10,21 @@ void main() {
 
   group('Layer3 设备连接 - 请求连接协议', () {
     test('请求编码 - 协议版本 0x02（默认）', () {
-      final payload = DeviceConnectionRequest().encode();
+      final payload = DeviceConnectionReq().encode();
       expect(payload, [0x02]);
     });
 
     test('请求编码 - 非法版本抛出 RangeError', () {
-      expect(() => DeviceConnectionRequest(protocolVersion: 256),
+      expect(() => DeviceConnectionReq(protocolVersion: 256),
           throwsA(isA<RangeError>()));
-      expect(() => DeviceConnectionRequest(protocolVersion: -1),
+      expect(() => DeviceConnectionReq(protocolVersion: -1),
           throwsA(isA<RangeError>()));
     });
 
     test('应答解码 - 全零示例（长度28）', () {
       // 12 (model) + 2 (fw) + 2 (hw) + 4*3 (sn) = 28 字节
       final bytes = List<int>.filled(28, 0x00);
-      final resp = DeviceConnectionResponse.fromBytes(bytes);
+      final resp = DeviceConnectionRes.fromBytes(bytes);
       expect(resp.model, '');
       expect(resp.firmwareVersion, '0.0.0');
       expect(resp.hardwareVersion, '0.0.0');
@@ -34,7 +34,7 @@ void main() {
 
     test('应答解码 - 长度不匹配抛出 ArgumentError', () {
       final bad = List<int>.filled(27, 0x00);
-      expect(() => DeviceConnectionResponse.fromBytes(bad),
+      expect(() => DeviceConnectionRes.fromBytes(bad),
           throwsA(isA<ArgumentError>()));
     });
   });
