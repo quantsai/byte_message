@@ -35,6 +35,7 @@ export 'src/protocols/layer2/dfu/dfu_decoder.dart';
 export 'src/protocols/layer3/control_bus/device_connection.dart';
 export 'src/protocols/layer3/control_bus/battery_status.dart';
 export 'src/protocols/layer3/control_bus/electrical_metrics.dart';
+export 'src/protocols/layer3/control_bus/device_status.dart';
 
 // 导出工厂类（按第二层协议分文件组织）
 export 'src/factories/control_bus_factory.dart';

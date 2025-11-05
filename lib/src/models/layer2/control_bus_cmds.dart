@@ -18,4 +18,8 @@ class CbCmd {
   /// 电压与电流请求（Electrical Metrics / Voltage & Current Request）
   /// CbCmd = 0x36
   static const int electricalMetricsRequest = 0x36;
+
+  /// 机器状态请求（Device Status Request）
+  /// CbCmd = 0x37
+  static const int deviceStatusRequest = 0x37;
 }

@@ -20,6 +20,7 @@ import '../protocols/layer2/control_bus/control_bus_encoder.dart';
 import '../protocols/layer3/control_bus/device_connection.dart';
 import '../protocols/layer3/control_bus/battery_status.dart';
 import '../protocols/layer3/control_bus/electrical_metrics.dart';
+import '../protocols/layer3/control_bus/device_status.dart';
 import '../models/decode_result.dart';
 import '../models/layer2/control_bus_cmds.dart';
 
@@ -188,6 +189,68 @@ class ControlBusFactory {
     );
 
     return InterChipEncoder().encode(packet);
+  }
+
+  /// 编码：机器状态请求（一次调用产出最终一层字节流）
+  ///
+  /// 功能描述：
+  /// - 将第三层“机器状态请求”的负载（空数组）编码为二层 ControlBusMessage（CbCmd=0x37），
+  ///   再包装为一层 InterChipPacket（Cmd=0xF8 普通指令），最终输出完整字节序列。
+  ///
+  /// 参数说明：
+  /// - [flag] 可选：指定一层 Flag（u8）。若为 null，则编码器根据负载自动选择短帧/长帧并默认启用校验和。
+  ///
+  /// 返回值：
+  /// - List<int>：完整的一层字节流，可直接发送。
+  List<int> encodeDeviceStatusReq({int? flag}) {
+    // 1) Layer3：创建请求对象并编码第三层负载（空数组）
+    final l3Payload = DeviceStatusReq().encode(); // []
+
+    // 2) Layer2 封装：CbCmd=0x37（机器状态请求），CbPayload=第三层负载
+    final l2Message = ControlBusMessage(
+      cbCmd: CbCmd.deviceStatusRequest,
+      cbPayload: l3Payload,
+    );
+    final l2 = ControlBusEncoder().encode(l2Message); // [0x37]
+
+    // 3) Layer1 包装：Cmd=0xF8（普通指令），Payload=二层负载
+    final packet = InterChipPacket(
+      flag: flag,
+      cmd: InterChipCmds.normal,
+      payload: l2,
+    );
+
+    return InterChipEncoder().encode(packet);
+  }
+
+  /// 解码：机器状态应答（一次调用从一层原始字节流还原第三层模型）
+  ///
+  /// 返回：
+  /// - 当一层 Cmd 为 AckOK 且第三层载荷长度为 5 时，返回解析后的 DeviceStatusRes；
+  /// - 否则返回状态并置 data 为 null。
+  DecodeResult<DeviceStatusRes> decodeDeviceStatusRes(List<int> rawData) {
+    // 1) Layer1 解码
+    final l1 = InterChipDecoder().decode(rawData);
+    if (l1 == null) {
+      throw ArgumentError('Invalid inter-chip packet: decode failed');
+    }
+
+    if (l1.cmd != InterChipCmds.ackOk) {
+      return DecodeResult<DeviceStatusRes>(status: l1.cmd, data: null);
+    }
+
+    final l3 = l1.payload; // AckOK 的 payload 为第三层载荷
+
+    // 机器状态第三层载荷长度必须为 5（状态 u8 + 错误码 u32）
+    if (l3.length != 5) {
+      throw ArgumentError(
+        'Invalid L3 device status payload length: expected 5, got ${l3.length}',
+      );
+    }
+
+    // 2) Layer3 解码为业务模型
+    final resp = DeviceStatusRes.fromBytes(l3);
+    return DecodeResult<DeviceStatusRes>(status: l1.cmd, data: resp);
   }
 
   /// 解码：电压与电流应答（一次调用从一层原始字节流还原第三层模型）
