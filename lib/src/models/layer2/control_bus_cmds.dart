@@ -34,4 +34,8 @@ class CbCmd {
   /// 速度控制请求（Speed Control Request）
   /// CbCmd = 0x41
   static const int speedControlRequest = 0x41;
+
+  /// 推杆速度设置请求（Push Rod Control / Set PushRod Speed Request）
+  /// CbCmd = 0x42
+  static const int pushRodControlRequest = 0x42;
 }
