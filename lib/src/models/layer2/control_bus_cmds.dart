@@ -46,4 +46,8 @@ class CbCmd {
   /// 速度档位控制请求（Speed Gear Control / Set Speed Gear Request）
   /// CbCmd = 0x4E
   static const int speedGearControlRequest = 0x4E;
+
+  /// 摇杆控制请求（Joystick Control / Set Joystick Request）
+  /// CbCmd = 0x81
+  static const int joystickControlRequest = 0x81;
 }
