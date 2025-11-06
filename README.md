@@ -43,7 +43,7 @@ Inter-chip 协议是一个用于芯片间通信的二进制协议，支持：
 
 ```yaml
 dependencies:
-  byte_message: ^1.1.0
+  byte_message: ^1.2.0
 ```
 
 然后运行：
@@ -54,35 +54,35 @@ dart pub get
 flutter pub get
 ```
 
-### 基本使用
+### 基本使用（工厂函数）
+
+使用工厂一次性完成第三层 → 第二层 → 第一层的组帧或解析。
 
 ```dart
 import 'package:byte_message/byte_message.dart';
 
 void main() {
-  // 创建编码器和解码器
-  final encoder = InterChipEncoder();
-  final decoder = InterChipDecoder();
+  // Control Bus 示例：请求电量/充电状态
+  final cbFactory = ControlBusFactory();
+  final l1BatteryReq = cbFactory.encodeBatteryStatusReq();
+  print('BatteryStatus Req L1 bytes: ${l1BatteryReq.map((b) => b.toRadixString(16).padLeft(2, '0')).toList()}');
 
-  // 创建数据包
-  final packet = InterChipPacket(
-    flag: 0x10,           // 启用校验和
-    len: 4,               // 总负载长度 (Cmd + Payload)
-    cmd: InterChipCmds.normal,  // 普通指令
-    payload: [0x01, 0x02, 0x03], // 负载数据
+  // 模拟设备返回 AckOK（payload 为第三层载荷，这里示意为 2 字节）
+  final simulatedAck = InterChipEncoder().encode(
+    InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x64, 0x01]),
   );
+  final batteryRes = cbFactory.decodeBatteryStatusRes(simulatedAck);
+  print('BatteryStatus decoded: ${batteryRes.data}');
 
-  // 编码数据包
-  final encodedData = encoder.encode(packet);
-  print('编码结果: ${encodedData?.map((b) => '0x${b.toRadixString(16).padLeft(2, '0')}').join(' ')}');
-
-  // 解码数据包
-  if (encodedData != null) {
-    final decodedPacket = decoder.decode(encodedData);
-    if (decodedPacket != null) {
-      print('解码成功: ${decodedPacket.toString()}');
-    }
-  }
+  // DFU 示例：开始升级
+  final dfuFactory = DfuFactory();
+  final l1StartReq = dfuFactory.encodeStartUpgradeReq();
+  print('StartUpgrade Req L1 bytes: ${l1StartReq.map((b) => b.toRadixString(16).padLeft(2, '0')).toList()}');
+  final simulatedDfuAck = InterChipEncoder().encode(
+    InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x01, 0x00]),
+  );
+  final startRes = dfuFactory.decodeStartUpgradeRes(simulatedDfuAck);
+  print('StartUpgrade isOk: ${startRes.data?.isOk}');
 }
 ```
 
@@ -121,7 +121,7 @@ void main() {
 
 ```yaml
 dependencies:
-  byte_message: ^1.1.0
+  byte_message: ^1.2.0
 ```
 
 ### 基础使用
@@ -154,7 +154,139 @@ void main() {
 }
 ```
 
-## 📖 详细使用指南
+## 📖 详细使用指南（严格分层，互不混用）
+
+### 三层协议之间的关系与数据流：
+
+- 编码方向：Layer3（业务对象 → 业务字节） → 作为 Layer2 的 payload（子命令字节流） → 再作为 Layer1 的 payload（链路层帧）进行封装与发送。
+- 解码方向：Layer1（解帧得到载荷） → 交由 Layer2（按子命令解析二层字节） → 再交由 Layer3（还原为具体业务对象）。
+- 责任边界：各层互不依赖实现细节，彼此通过“字节载荷”衔接；你可以仅使用某一层的编解码，也可以组合三层形成完整链路。
+
+#### 示例总览：
+
+- 第一层协议 L1：包头
+
+  | L1.flag | L1.en | L1.lenH | L1.cmd | L1.payload | L1.checksum |
+  | ------- | ----- | ------- | ------ | ---------- | ----------- |
+  | u8      | u8    | u8      | u8     | u8[n]      | u8          |
+
+- 第二层协议：control bus
+
+  | L2.cmd | L2.payload |
+  | ------ | ---------- |
+  | u8     | u8[n]      |
+
+- 第二层协议：dfu
+
+  | L2.cmd | L2.version | L2.payload |
+  | ------ | ---------- | ---------- |
+  | u8     | u8         | u8[n]      |
+
+- 第三层协议：业务内容(该层内容由具体业务定义，不固定长度)
+
+  | L3.content1 | L3.content2 | L3.content3 |
+  | ----------- | ----------- | ----------- |
+  | u8[]        | u8[]        | u8[]        |
+
+编码示意（两个独立示例）：
+
+- ControlBus deviceStatusRequest：Layer3（无） → Layer2 输出 [0x37] → Layer1 封装为帧（载荷含 0x37）。
+- DFU startUpgrade(ver=0x01)：Layer3（无） → Layer2 输出 [dfuCmd, 0x01] → Layer1 封装为帧（载荷含 dfu 二层字节）。
+
+本库将协议按层次拆分为：
+
+- 第一层（Layer1，Inter-chip 帧）：只负责帧头、指令码、长度、校验等链路层封装与解析，载荷视为“透明字节”。
+- 第二层（Layer2，Control Bus / DFU 子命令）：只负责二层命令字与其二层载荷的编码与解析，不关心一层细节。
+- 第三层（Layer3，具体业务载荷）：只负责具体业务的字段布局与字节编码，不关心一层或二层细节。
+
+以下示例分别针对每一层进行“单独解耦”的编码与解码演示，不把层与层混在一起。
+
+### 第一层（Layer1）Inter-chip 帧：只演示一层的编码与解码
+
+```dart
+import 'package:byte_message/byte_message.dart';
+
+/// 示例仅演示一层：将一段“透明载荷字节”封装为 inter-chip 帧，并解码回透明载荷
+void main() {
+  final encoder = InterChipEncoder();
+  final decoder = InterChipDecoder();
+
+  // 一层载荷（透明字节，来源可以是任意上层）：
+  final transparentPayload = const [0xAA, 0xBB, 0xCC];
+
+  // 一层编码：仅设置一层指令码和标志位，不涉及二层或三层对象
+  final packet = InterChipPacket(
+    flag: 0x10, // 启用校验和
+    cmd: InterChipCmds.normal,
+    payload: transparentPayload,
+  );
+  final encoded = encoder.encode(packet);
+  print('Layer1 encoded bytes: ${encoded?.map((b) => b.toRadixString(16).padLeft(2, '0')).toList()}');
+
+  // 一层解码：得到一层的指令与透明载荷
+  final decoded = decoder.decode(encoded);
+  if (decoded != null) {
+    print('Layer1 decoded cmd: 0x${decoded.cmd.toRadixString(16)}');
+    print('Layer1 decoded payload: ${decoded.payload}');
+  }
+}
+```
+
+### 第二层（Layer2）Control Bus 与 DFU：只演示二层的编码与解码
+
+```dart
+import 'package:byte_message/byte_message.dart';
+
+/// 示例仅演示二层：将二层消息编码为“二层字节”，并从“二层字节”解码为消息对象
+void main() {
+  // Control Bus 二层编码
+  final l2Cb = ControlBusMessage(cbCmd: CbCmd.deviceStatusRequest, cbPayload: const []);
+  final cbBytes = ControlBusEncoder().encode(l2Cb); // 例如 [0x37]
+  print('Layer2 ControlBus encoded: ${cbBytes.map((b) => b.toRadixString(16).padLeft(2, '0')).toList()}');
+
+  // Control Bus 二层解码
+  final cbMsg = ControlBusDecoder().decode(cbBytes);
+  print('Layer2 ControlBus decoded cmd: 0x${cbMsg?.cbCmd.toRadixString(16)}, payload: ${cbMsg?.cbPayload}');
+
+  // DFU 二层编码
+  final l2Dfu = DfuMessage(dfuCmd: DfuCmd.startUpgrade, dfuVersion: 0x01, dfuPayload: const []);
+  final dfuBytes = DfuEncoder().encode(l2Dfu); // 例如 [0x02, 0x01]
+  print('Layer2 DFU encoded: ${dfuBytes.map((b) => b.toRadixString(16).padLeft(2, '0')).toList()}');
+
+  // DFU 二层解码
+  final dfuMsg = DfuDecoder().decode(dfuBytes);
+  print('Layer2 DFU decoded cmd: 0x${dfuMsg?.dfuCmd.toRadixString(16)}, ver: ${dfuMsg?.dfuVersion}, payload: ${dfuMsg?.dfuPayload}');
+}
+```
+
+### 第三层（Layer3）具体业务载荷：只演示三层的编码与解码
+
+```dart
+import 'package:byte_message/byte_message.dart';
+
+/// 示例仅演示三层：将业务对象编码为“业务字节”，并从“业务字节”解码为业务对象
+void main() {
+  // Control Bus 三层业务：设备连接请求/应答
+  final connReq = GetDeviceConnectionReq(protocolVersion: 0x02);
+  final connReqBytes = connReq.encode(); // 例如 [0x02]
+  print('Layer3 ConnectionReq encoded: ${connReqBytes}');
+
+  // 设备连接应答三层解析（示例字节，实际长度与内容请参考协议文档）
+  final connResBytes = List<int>.filled(28, 0x00);
+  final connRes = GetDeviceConnectionRes.fromBytes(connResBytes);
+  print('Layer3 ConnectionRes decoded -> model=${connRes.model}, fw=${connRes.firmwareVersion}, hw=${connRes.hardwareVersion}');
+
+  // DFU 三层业务：写升级包
+  final blob = DfuBlob(pageId: 1, blobId: 1, blobStart: 0, blobData: const [0xDE, 0xAD, 0xBE]);
+  final writeReq = WriteUpgradeChunkReq(blob: blob);
+  final writeReqBytes = writeReq.encode();
+  print('Layer3 WriteUpgradeChunkReq encoded: ${writeReqBytes}');
+
+  // DFU 三层业务：写升级包应答解析（u8 版本，u8 结果码）
+  final writeRes = WriteUpgradeChunkRes.fromBytes(const [0x01, 0x00]);
+  print('Layer3 WriteUpgradeChunkRes decoded -> dfuPkgVersion=${writeRes.dfuPkgVersion}, isOk=${writeRes.isOk}');
+}
+```
 
 ### 编码器配置
 
@@ -291,6 +423,115 @@ if (decoded == null) {
 - 多包处理
 - 错误处理
 
+更多 DFU 示例请参考以下文件：
+
+- `example/dfu/get_device_info_factory_example.dart`
+- `example/dfu/start_upgrade_factory_example.dart`
+- `example/dfu/write_upgrade_chunk_factory_example.dart`
+- `example/dfu/finish_upgrade_factory_example.dart`
+
+## DFU 使用示例
+
+以下示例展示使用 `DfuFactory` 完成 DFU 相关流程的编码与解码。
+
+### 获取设备信息（Get Device Info）
+
+```dart
+import 'package:byte_message/byte_message.dart';
+
+void main() {
+  final factory = DfuFactory();
+
+  // 编码请求（DfuCmd=0x01）
+  final req = factory.encodeGetDeviceInfoReq();
+
+  // 模拟 AckOK 应答：第三层载荷应长度为 33 字节
+  // 这里仅演示解码调用，实际应由设备返回真实字节序列
+  final decoded = factory.decodeGetDeviceInfoRes(req); // 演示：通常传设备返回的 bytes
+  if (decoded.data != null) {
+    final info = decoded.data!;
+    print('romVersion: ${info.romVersion}'); // 解析规则：忽略首字节，仅用后三字节为 MAJOR.MINOR.REVISION（REVISION 两位）
+  }
+}
+```
+
+### 开始升级（Start Upgrade）
+
+```dart
+import 'package:byte_message/byte_message.dart';
+
+void main() {
+  final factory = DfuFactory();
+
+  // 编码请求（DfuCmd=0x02）
+  final req = factory.encodeStartUpgradeReq();
+
+  // 模拟 AckOK 应答（第三层载荷：u8 dfuPkgVersion, u8 dfuOpResult）
+  final ackOk = InterChipEncoder().encode(
+    InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x01, 0x00]),
+  );
+
+  final decoded = factory.decodeStartUpgradeRes(ackOk);
+  if (decoded.data != null) {
+    print('StartUpgrade isOk: ${decoded.data!.isOk}');
+  }
+}
+```
+
+### 写升级包（Write Upgrade Chunk）
+
+```dart
+import 'package:byte_message/byte_message.dart';
+
+void main() {
+  final factory = DfuFactory();
+
+  // 构造 DfuBlob（PageId/BlobId/BlobStart 均为 u16，大端；BlobData 为 u8[n]）
+  final blob = DfuBlob(
+    pageId: 1,
+    blobId: 1,
+    blobStart: 0,
+    blobData: const [0xDE, 0xAD, 0xBE, 0xEF],
+  );
+
+  // 编码请求（DfuCmd=0x05），第三层载荷为 DfuBlob 字节序列
+  final req = factory.encodeWriteUpgradeChunkReq(blob: blob);
+
+  // 模拟 AckOK 应答（第三层载荷：u8 dfuPkgVersion, u8 dfuOpResult）
+  final ackOk = InterChipEncoder().encode(
+    InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x01, 0x00]),
+  );
+
+  final decoded = factory.decodeWriteUpgradeChunkRes(ackOk);
+  if (decoded.data != null) {
+    print('WriteUpgradeChunk isOk: ${decoded.data!.isOk}');
+  }
+}
+```
+
+### 完成升级（Finish Upgrade）
+
+```dart
+import 'package:byte_message/byte_message.dart';
+
+void main() {
+  final factory = DfuFactory();
+
+  // 编码请求（DfuCmd=0x03）
+  final req = factory.encodeFinishUpgradeReq();
+
+  // 模拟 AckOK 应答（第三层载荷：u8 dfuPkgVersion, u8 dfuOpResult）
+  final ackOk = InterChipEncoder().encode(
+    InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x01, 0x00]),
+  );
+
+  final decoded = factory.decodeFinishUpgradeRes(ackOk);
+  if (decoded.data != null) {
+    print('FinishUpgrade isOk: ${decoded.data!.isOk}');
+  }
+}
+```
+
 ## 测试
 
 运行所有测试：
@@ -416,11 +657,10 @@ print(bytes); // [16, 4, 248]
 
 **作者**: 蔡铨  
 **创建日期**: 2025 年 11 月 3 日  
-**版本**: 1.1.0
+**版本**: 1.3.0
 
 ---
 
 <div align="center">
-  <p>如果这个库对您有帮助，请给我们一个 ⭐️</p>
   <p>Made with ❤️ by 蔡铨</p>
 </div>

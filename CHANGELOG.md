@@ -125,3 +125,34 @@
   - 更新：测试已改为实例化 `DeviceConnectionRequest()` 并调用 `encode()`；非法版本在构造时抛出 `RangeError`
   - 更新：响应模型断言改为 `resp.model` 字符串（不再检查原始 `modelBytes` 与 `modelString`）；版本断言为 `'0.0.0'`，序列号断言为 `'000'`
 - 验证：`dart analyze`（No issues found）与 `dart test -r expanded`（All tests passed）
+
+## 1.3.0 (2025-11-06)
+
+### 新增：DFU 第三层协议功能与示例
+
+- 新增第三层 DFU 协议与工厂能力：
+  - 开始升级（Start Upgrade）：
+    - 协议文件：`src/protocols/layer3/dfu/start_upgrade.dart`
+    - 工厂方法：`DfuFactory.encodeStartUpgradeReq()` / `DfuFactory.decodeStartUpgradeRes(...)`
+    - 示例：`example/dfu/start_upgrade_factory_example.dart`
+  - 完成升级（Finish Upgrade）：
+    - 协议文件：`src/protocols/layer3/dfu/finish_upgrade.dart`
+    - 工厂方法：`DfuFactory.encodeFinishUpgradeReq()` / `DfuFactory.decodeFinishUpgradeRes(...)`
+    - 示例：`example/dfu/finish_upgrade_factory_example.dart`
+  - 写升级包（Write Upgrade Chunk）：
+    - 协议文件：`src/protocols/layer3/dfu/write_upgrade_chunk.dart`
+    - 新增模型类：`DfuBlob`（字段：pageId/blobId/blobStart/blobData，自动计算 blobSize）
+    - 工厂方法：`DfuFactory.encodeWriteUpgradeChunkReq({required DfuBlob blob, ...})` / `DfuFactory.decodeWriteUpgradeChunkRes(...)`
+    - 导出：`lib/byte_message.dart` 增加对以上协议文件的 export
+    - 示例：`example/dfu/write_upgrade_chunk_factory_example.dart`
+
+### 修正：DFU 获取设备信息 romVersion 解析规则
+
+- 解析规则更新：`romVersion` 字节数组仅使用后 3 字节解析版本，忽略第 1 字节（示例 `[0x00, 0x02, 0x11, 0x06]` 解析为 `2.17.06`，REVISION 左填充至 2 位）
+- 变更位置：`src/protocols/layer3/dfu/get_device_info.dart`
+- 示例更新：`example/dfu/get_device_info_factory_example.dart` 的 `romVersion` 示例载荷同步调整
+
+### 文档与质量
+
+- README 新增“DFU 使用示例”版块，覆盖获取设备信息、开始升级、写升级包、完成升级的工厂方法用法与示例代码
+- QA：`dart analyze` 通过（No issues found）
