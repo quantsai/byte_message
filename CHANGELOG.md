@@ -156,3 +156,34 @@
 
 - README 新增“DFU 使用示例”版块，覆盖获取设备信息、开始升级、写升级包、完成升级的工厂方法用法与示例代码
 - QA：`dart analyze` 通过（No issues found）
+
+## 1.3.1 (2025-11-10)
+
+### 测试与覆盖率
+
+- 新增大量单元测试，覆盖未触达分支与边界：
+  - SetSpeedReq/SetSpeedAck（f32 BE 编码、空/非空应答校验）
+  - FoldState（fromValue 合法/非法解析）与 SetFoldStateReq（u8 编码）
+  - ControlBusMessage（解析、等值性、toString）
+  - byte_packing 工具（composeVersion、pack/read U16/U32/S16/S32、F16/F32、padDecimalLeft 等）
+  - DFU FinishUpgrade（请求空负载、响应解析版本/结果与非法长度）
+  - InterChipDecoder（非法包格式、短/长帧 expected length、decodeMultiple 连续包、校验和验证）
+  - GetElectricalMetricsRes（电压/电流/功率解析）
+  - GetDeviceLanguageReq/Res（空请求、合法/非法语言解析）
+- 覆盖率提升至 76.0%（823/1083 行），生成 LCOV 报告：
+  - 文本：coverage/lcov.info（lcov --summary）
+  - HTML：coverage/html/index.html（genhtml 输出）
+
+### 工具与文档
+
+- 使用 LCOV 工具生成覆盖率摘要与 HTML 报告：
+  - 安装：`brew install lcov`
+  - 摘要：`lcov --summary coverage/lcov.info`
+  - 列表：`lcov --list coverage/lcov.info`
+  - HTML：`genhtml coverage/lcov.info --output-directory coverage/html --branch-coverage --title "byte_message coverage" --legend`
+- 新增并更新根目录「说明文档.md」，记录项目规划、实施方案、进度、覆盖率数据与后续计划。
+
+### 质量保证
+
+- 测试执行：`dart test -r compact`（All 118 tests passed）
+- 覆盖率脚本：`./run_tests.sh coverage` 成功产出 lcov.info 与 HTML 报告

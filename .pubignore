@@ -1,0 +1,8 @@
+coverage/
+coverage/**
+coverage/html/**
+coverage/test/**
+debug_decode.dart
+.vscode/
+.metadata/
+.DS_Store

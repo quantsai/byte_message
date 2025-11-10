@@ -43,7 +43,7 @@ Inter-chip 协议是一个用于芯片间通信的二进制协议，支持：
 
 ```yaml
 dependencies:
-  byte_message: ^1.2.0
+  byte_message: ^1.3.1
 ```
 
 然后运行：
@@ -113,6 +113,50 @@ void main() {
 [Flag] [LenL] [LenH] [Cmd] [Payload...] [Checksum?]
 ```
 
+## 📊 覆盖率与 LCOV 使用
+
+### 当前版本覆盖率
+
+- 行覆盖率：76.0%（823/1083），覆盖 38 个源文件
+- 报告位置：
+  - 文本：coverage/lcov.info
+  - HTML：coverage/html/index.html
+
+### 生成与查看步骤（macOS）
+
+1. 运行测试并生成覆盖率（示例仓库已提供脚本）：
+
+```bash
+./run_tests.sh coverage
+# 或者手动方式（需确保测试生成 lcov.info）：
+# dart test -r compact
+# genhtml coverage/lcov.info --output-directory coverage/html --branch-coverage --title "byte_message coverage" --legend
+```
+
+2. 安装并使用 LCOV（如需摘要/列表）：
+
+```bash
+brew install lcov
+lcov --summary coverage/lcov.info
+lcov --list coverage/lcov.info
+```
+
+3. 生成 HTML 可视化报告并查看：
+
+```bash
+genhtml coverage/lcov.info --output-directory coverage/html --branch-coverage --title "byte_message coverage" --legend
+# 启动本地预览（任选其一）
+python3 -m http.server 8000 &
+# 然后在浏览器打开：
+# http://localhost:8000/coverage/html/index.html
+```
+
+### 报告阅读提示
+
+- 绿色：已命中，红色：未命中，黄色：部分命中
+- 点击目录（utils/factories/protocols/models）进入各文件明细
+- 低覆盖率优先项：inter_chip_models.dart、control_bus_factory.dart、dfu_models.dart 等
+
 ## 快速开始
 
 ### 安装
@@ -121,7 +165,7 @@ void main() {
 
 ```yaml
 dependencies:
-  byte_message: ^1.2.0
+  byte_message: ^1.3.1
 ```
 
 ### 基础使用
