@@ -12,6 +12,8 @@ import 'package:byte_message/src/protocols/layer3/control_bus/get_battery_status
 import 'package:byte_message/src/protocols/layer3/control_bus/get_operating_mode.dart';
 import 'package:byte_message/src/protocols/layer3/control_bus/get_device_status.dart';
 import 'package:byte_message/src/protocols/layer3/control_bus/get_speed_gear.dart';
+import 'package:byte_message/src/protocols/layer3/control_bus/get_device_language.dart';
+import 'package:byte_message/src/protocols/layer3/control_bus/get_mute_status.dart';
 import 'package:byte_message/src/protocols/layer3/control_bus/set_fold_state.dart';
 import 'package:byte_message/src/protocols/layer3/dfu/write_upgrade_chunk.dart';
 
@@ -330,6 +332,138 @@ void main() {
       final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: List<int>.filled(7, 0x00));
       final raw = InterChipEncoder().encode(ack);
       expect(() => ControlBusFactory().decodeElectricalMetricsRes(raw), throwsArgumentError);
+    });
+
+    /// 功能描述：验证 ControlBusFactory.encodeDeviceLanguageReq 生成的一层字节流，
+    /// 能被第一层与第二层解码为预期的 Cmd 与 CbCmd，并包含第三层请求负载（空）。
+    test('encode device language request -> decode L1/L2/L3 content', () {
+      final bytes = ControlBusFactory().encodeDeviceLanguageReq();
+
+      final l1 = InterChipDecoder().decode(bytes);
+      expect(l1, isNotNull);
+      expect(l1!.cmd, InterChipCmds.normal);
+
+      final l2 = ControlBusDecoder().decode(l1.payload);
+      expect(l2, isNotNull);
+      expect(l2!.cbCmd, CbCmd.deviceLanguageRequest);
+      expect(l2.cbPayload, isEmpty);
+    });
+
+    /// 功能描述：构造“获取设备语言应答”的第三层载荷（chinese=0x01），
+    /// 包装为 AckOK 后由工厂解码为业务模型，并断言语言为 chinese。
+    test('decode device language ack -> chinese', () {
+      final l3 = [DeviceLanguage.chinese.value];
+      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: l3);
+      final raw = InterChipEncoder().encode(ack);
+
+      final res = ControlBusFactory().decodeDeviceLanguageRes(raw);
+      expect(res.status, InterChipCmds.ackOk);
+      expect(res.data, isNotNull);
+      expect(res.data!.language, DeviceLanguage.chinese);
+    });
+
+    /// 负例：设备语言应答载荷长度不为 1 时应抛出 ArgumentError
+    test('decode device language ack with invalid length throws', () {
+      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const []);
+      final raw = InterChipEncoder().encode(ack);
+      expect(() => ControlBusFactory().decodeDeviceLanguageRes(raw), throwsArgumentError);
+    });
+
+    /// 功能描述：验证 ControlBusFactory.encodeMuteStatusReq 生成的一层字节流，
+    /// 能被第一层与第二层解码为预期的 Cmd 与 CbCmd，并包含第三层请求负载（空）。
+    test('encode mute status request -> decode L1/L2/L3 content', () {
+      final bytes = ControlBusFactory().encodeMuteStatusReq();
+
+      final l1 = InterChipDecoder().decode(bytes);
+      expect(l1, isNotNull);
+      expect(l1!.cmd, InterChipCmds.normal);
+
+      final l2 = ControlBusDecoder().decode(l1.payload);
+      expect(l2, isNotNull);
+      expect(l2!.cbCmd, CbCmd.muteStatusRequest);
+      expect(l2.cbPayload, isEmpty);
+    });
+
+    /// 功能描述：构造“获取静音状态应答”的第三层载荷（off=0x00），
+    /// 包装为 AckOK 后由工厂解码为业务模型，并断言状态为 off。
+    test('decode mute status ack -> off', () {
+      final l3 = [MuteState.off.value];
+      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: l3);
+      final raw = InterChipEncoder().encode(ack);
+
+      final res = ControlBusFactory().decodeMuteStatusRes(raw);
+      expect(res.status, InterChipCmds.ackOk);
+      expect(res.data, isNotNull);
+      expect(res.data!.state, MuteState.off);
+    });
+
+    /// 负例：静音状态应答载荷长度不为 1 时应抛出 ArgumentError
+    test('decode mute status ack with invalid length throws', () {
+      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x00, 0x01]);
+      final raw = InterChipEncoder().encode(ack);
+      expect(() => ControlBusFactory().decodeMuteStatusRes(raw), throwsArgumentError);
+    });
+
+    /// 功能描述：验证 ControlBusFactory.encodeSetDeviceLanguageReq 的编码，并通过 L1/L2 解码检查 CbCmd 与第三层负载
+    test('encode set device language request -> decode L1/L2/L3 content', () {
+      final bytes = ControlBusFactory().encodeSetDeviceLanguageReq(language: DeviceLanguage.english);
+
+      final l1 = InterChipDecoder().decode(bytes);
+      expect(l1, isNotNull);
+      expect(l1!.cmd, InterChipCmds.normal);
+
+      final l2 = ControlBusDecoder().decode(l1.payload);
+      expect(l2, isNotNull);
+      expect(l2!.cbCmd, CbCmd.deviceLanguageControlRequest);
+      expect(l2.cbPayload, equals([DeviceLanguage.english.value]));
+    });
+
+    /// 功能描述：构造空负载 AckOK，验证 decodeSetDeviceLanguageAck 能正确解析为 Ack。
+    test('decode set device language ack -> ack-only', () {
+      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const []);
+      final raw = InterChipEncoder().encode(ack);
+
+      final res = ControlBusFactory().decodeSetDeviceLanguageAck(raw);
+      expect(res.status, InterChipCmds.ackOk);
+      expect(res.data, isNotNull);
+    });
+
+    /// 负例：设置设备语言 Ack-only 应答带有非空第三层负载时应抛出 ArgumentError
+    test('decode set device language ack with non-empty payload throws', () {
+      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x01]);
+      final raw = InterChipEncoder().encode(ack);
+      expect(() => ControlBusFactory().decodeSetDeviceLanguageAck(raw), throwsArgumentError);
+    });
+
+    /// 功能描述：验证 ControlBusFactory.encodeSetMuteStatusReq 的编码，并通过 L1/L2 解码检查 CbCmd 与第三层负载
+    test('encode set mute status request -> decode L1/L2/L3 content', () {
+      final bytes = ControlBusFactory().encodeSetMuteStatusReq(state: MuteState.on);
+
+      final l1 = InterChipDecoder().decode(bytes);
+      expect(l1, isNotNull);
+      expect(l1!.cmd, InterChipCmds.normal);
+
+      final l2 = ControlBusDecoder().decode(l1.payload);
+      expect(l2, isNotNull);
+      expect(l2!.cbCmd, CbCmd.muteControlRequest);
+      expect(l2.cbPayload, equals([MuteState.on.value]));
+    });
+
+    /// 功能描述：构造空负载 AckOK，验证 decodeSetMuteStatusAck 能正确解析为 Ack。
+    test('decode set mute status ack -> ack-only', () {
+      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const []);
+      final raw = InterChipEncoder().encode(ack);
+
+      final res = ControlBusFactory().decodeSetMuteStatusAck(raw);
+      expect(res.status, InterChipCmds.ackOk);
+      expect(res.data, isNotNull);
+    });
+
+    /// 负例：设置静音状态 Ack-only 应答带有非空第三层负载时应抛出 ArgumentError
+    test('decode set mute status ack with non-empty payload throws', () {
+      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x01]);
+      final raw = InterChipEncoder().encode(ack);
+      expect(() => ControlBusFactory().decodeSetMuteStatusAck(raw), throwsArgumentError);
     });
   });
 

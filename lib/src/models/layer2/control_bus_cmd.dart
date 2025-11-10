@@ -54,4 +54,20 @@ class CbCmd {
   /// 折叠/展开控制请求（Fold/Unfold Control / Set Fold State Request）
   /// CbCmd = 0x82
   static const int foldControlRequest = 0x82;
+
+  /// 设置设备语言请求（Set Device Language Control Request）
+  /// CbCmd = 0x83
+  static const int deviceLanguageControlRequest = 0x83;
+
+  /// 设置静音状态请求（Mute Control / Set Mute Status Request）
+  /// CbCmd = 0x84
+  static const int muteControlRequest = 0x84;
+
+  /// 设备语言请求（Device Language Request / Get Device Language）
+  /// CbCmd = 0x85
+  static const int deviceLanguageRequest = 0x85;
+
+  /// 静音状态请求（Mute Status Request / Get Mute Status）
+  /// CbCmd = 0x86
+  static const int muteStatusRequest = 0x86;
 }

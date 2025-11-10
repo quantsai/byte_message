@@ -15,13 +15,15 @@ InterChipPacket buildStandardPacket(InterChipCmds cmd, List<int> payload) {
 void main() {
   group('Layer1 InterChipEncoder/Decoder', () {
     test('encode standard frame with checksum and decode back', () {
-      final packet = buildStandardPacket(InterChipCmds.normal, const [0x01, 0x02]);
+      final packet =
+          buildStandardPacket(InterChipCmds.normal, const [0x01, 0x02]);
       final encoder = InterChipEncoder();
 
       final bytes = encoder.encode(packet);
 
       // 结构：Flag | Len | Cmd | Payload | Checksum
-      expect(bytes.length, 1 /*flag*/ + 1 /*len*/ + 1 /*cmd*/ + 2 /*payload*/ + 1 /*checksum*/);
+      expect(bytes.length,
+          1 /*flag*/ + 1 /*len*/ + 1 /*cmd*/ + 2 /*payload*/ + 1 /*checksum*/);
 
       // Flag 校验：启用校验和但非长帧
       final flag = bytes[0];
@@ -35,7 +37,8 @@ void main() {
       // 校验和验证
       final dataForChecksum = bytes.sublist(0, bytes.length - 1);
       final checksumByte = bytes.last;
-      expect(PacketUtils.verifyXorChecksum(dataForChecksum, checksumByte), isTrue);
+      expect(
+          PacketUtils.verifyXorChecksum(dataForChecksum, checksumByte), isTrue);
 
       // 解码验证
       final decoder = InterChipDecoder();
@@ -50,7 +53,9 @@ void main() {
       expect(decoded.lenH, isNull);
     });
 
-    test('encode long frame when payload > max standard payload and decode back', () {
+    test(
+        'encode long frame when payload > max standard payload and decode back',
+        () {
       // 构造超出标准帧限制的 payload（> 254）
       final payload = List<int>.generate(260, (i) => i & 0xFF);
       final packet = buildStandardPacket(InterChipCmds.normal, payload);
@@ -79,11 +84,13 @@ void main() {
       expect(decoded.len, equals(lenL));
       expect(decoded.lenH, equals(lenH));
       expect(decoded.payload.length, equals(payload.length));
-      expect(decoded.payload.sublist(0, 5), equals(payload.sublist(0, 5))); // 采样比对
+      expect(
+          decoded.payload.sublist(0, 5), equals(payload.sublist(0, 5))); // 采样比对
     });
 
     test('decode returns null on checksum mismatch', () {
-      final packet = buildStandardPacket(InterChipCmds.normal, const [0x0A, 0x0B, 0x0C]);
+      final packet =
+          buildStandardPacket(InterChipCmds.normal, const [0x0A, 0x0B, 0x0C]);
       final encoder = InterChipEncoder();
       final bytes = encoder.encode(packet);
 
@@ -94,6 +101,56 @@ void main() {
       final decoder = InterChipDecoder();
       final decoded = decoder.decode(corrupted);
       expect(decoded, isNull);
+    });
+  });
+
+  group('Layer1 InterChip models helpers', () {
+    test('InterChipFlags encode/decode', () {
+      final flags = InterChipFlags(isLongFrame: true, checksumEnable: true);
+      final flagByte = flags.encode();
+      expect(PacketConstants.isLongFrameEnabled(flagByte), isTrue);
+      expect(PacketConstants.isChecksumEnabled(flagByte), isTrue);
+
+      final decoded = InterChipFlags.decode(flagByte);
+      expect(decoded, equals(flags));
+    });
+
+    test('InterChipPacket totalPayloadLength with len/lenH', () {
+      // 长帧：lenH存在时 totalPayloadLength = bytesToInt16(len, lenH)
+      final pktLong = InterChipPacket(
+        flag: PacketConstants.FLAG_LONG_CHECKSUM,
+        len: 0x34,
+        lenH: 0x12,
+        cmd: InterChipCmds.normal,
+        payload: const [0xAA],
+        checksum: 0x00,
+      );
+      expect(pktLong.totalPayloadLength,
+          equals(PacketUtils.bytesToInt16(0x34, 0x12)));
+
+      // 短帧：len存在且无lenH时 totalPayloadLength = len
+      final pktShort = InterChipPacket(
+        flag: PacketConstants.FLAG_CHECKSUM,
+        len: 0x03,
+        cmd: InterChipCmds.normal,
+        payload: const [0xAA, 0xBB],
+        checksum: 0x00,
+      );
+      expect(pktShort.totalPayloadLength, equals(0x03));
+
+      // 未提供len：返回 payload.length + 1（含cmd）
+      final pktNoLen = InterChipPacket(
+        cmd: InterChipCmds.normal,
+        payload: const [0xAA, 0xBB, 0xCC],
+      );
+      expect(pktNoLen.totalPayloadLength, equals(4));
+    });
+
+    test('InterChipPacket field validation throws on invalid payload byte', () {
+      expect(
+        () => InterChipPacket(cmd: InterChipCmds.normal, payload: const [256]),
+        throwsArgumentError,
+      );
     });
   });
 }
