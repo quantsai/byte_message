@@ -4,6 +4,16 @@
 
 import 'package:byte_message/byte_message.dart';
 
+/// 主示例入口
+///
+/// 功能描述：
+/// - 演示 byte_message 库的核心用法，顺序调用各示例方法（example1 ~ example7）
+///
+/// 参数：
+/// - 无
+///
+/// 返回值：
+/// - void（无返回值，仅在控制台打印示例输出）
 void main() {
   print('=== Inter-chip协议编码解码库使用示例 ===\n');
 
@@ -16,7 +26,17 @@ void main() {
   example7();
 }
 
-/// 自动短帧：flag、len、lenH、checksum
+/// 示例1：自动短帧（自动处理 flag、len、lenH、checksum）
+///
+/// 功能描述：
+/// - 仅提供 cmd 和 payload，编码器自动完成短帧的标志位、长度与校验和计算；
+/// - 展示 InterChipEncoder/InterChipDecoder 的基本用法。
+///
+/// 参数：
+/// - 无
+///
+/// 返回值：
+/// - void（在控制台打印编码与解码结果）
 void example1() {
   print('');
   print('1. 自动短帧：flag、len、lenH、checksum');
@@ -46,7 +66,17 @@ void example1() {
   print('');
 }
 
-/// 自动：flag、len、lenH、checksum
+/// 示例2：自动长帧（自动处理 flag、len、lenH、checksum）
+///
+/// 功能描述：
+/// - 构造超过短帧长度的负载，编码器自动转换为长帧并计算长度与校验；
+/// - 验证长帧的编码与解码流程。
+///
+/// 参数：
+/// - 无
+///
+/// 返回值：
+/// - void（在控制台打印编码与解码结果）
 void example2() {
   print('');
   print('2. 自动长帧：flag、len、lenH、checksum');
@@ -74,7 +104,17 @@ void example2() {
   print('');
 }
 
-/// 手动flag，自动len、lenH、checksum
+/// 示例3：手动指定 flag，自动计算 len、lenH、checksum
+///
+/// 功能描述：
+/// - 通过 InterChipFlags 手动构造 flag，其余长度与校验和由编码器自动处理；
+/// - 展示手动与自动混合配置的使用方式。
+///
+/// 参数：
+/// - 无
+///
+/// 返回值：
+/// - void（在控制台打印编码与解码结果）
 void example3() {
   print('');
   print('3. 手动flag，自动len、lenH、checksum');
@@ -105,8 +145,17 @@ void example3() {
   print('');
 }
 
-/// 全手动flag、len、lenH、checksum
-/// 不推荐，手动设置flag、len、lenH、checksum的值容易冲突
+/// 示例4：全手动 flag、len、lenH、checksum（不推荐）
+///
+/// 功能描述：
+/// - 手动设置所有一层字段（flag、len、lenH、checksum），演示自由度与风险；
+/// - 由于易与自动规则冲突，实际项目中不推荐此方式。
+///
+/// 参数：
+/// - 无
+///
+/// 返回值：
+/// - void（在控制台打印编码与解码结果）
 void example4() {
   print('');
   print('4. 全手动flag、len、lenH、checksum');
@@ -140,17 +189,17 @@ void example4() {
   print('');
 }
 
-/// 标志位 InterChipFlags 使用示例
+/// 示例5：标志位 InterChipFlags 的编码与解码
 ///
 /// 功能描述：
-/// - 展示 InterChipFlags 的位定义、编码与解码（与 encode 的反向操作）
-/// - 通过 InterChipFlags.encode() 生成整型标志位，再使用 InterChipFlags.decode()/fromFlag 解析回对象
+/// - 展示 InterChipFlags 的位定义、编码与解码；
+/// - 通过 InterChipFlags.encode() 生成整型标志位，再使用 InterChipFlags.decode()/fromFlag 解析回对象。
 ///
 /// 参数：
 /// - 无
 ///
 /// 返回值：
-/// - void（仅打印示例结果）
+/// - void（在控制台打印示例结果）
 void example5() {
   print('');
   print('5. 标志位 InterChipFlags 使用示例');
@@ -176,12 +225,18 @@ void example5() {
   print('');
 }
 
-/// 二层协议：Control Bus 编码与解码示例
+/// 示例6：二层协议 Control Bus 的编码与解码
 ///
 /// 功能描述：
-/// - 使用 ControlBusMessage 构造二层负载（CbCmd + CbPayload）
-/// - 通过 ControlBusEncoder 生成一层 InterChipPacket 并序列化
-/// - 使用 InterChipDecoder + ControlBusDecoder 反解得到二层结构
+/// - 使用 ControlBusMessage 构造二层负载（CbCmd + CbPayload）；
+/// - 通过 ControlBusEncoder 生成一层 InterChipPacket 并序列化；
+/// - 使用 InterChipDecoder + ControlBusDecoder 反解得到二层结构。
+///
+/// 参数：
+/// - 无
+///
+/// 返回值：
+/// - void（在控制台打印编码与解码结果）
 void example6() {
   print('');
   print('6. 二层协议：Control Bus 编码与解码示例');
@@ -219,12 +274,18 @@ void example6() {
   print('');
 }
 
-/// 二层协议：DFU 编码与解码示例
+/// 示例7：二层协议 DFU 的编码与解码
 ///
 /// 功能描述：
-/// - 使用 DfuMessage 构造二层负载（DfuCmd + DfuVersion + DfuPayload）
-/// - 通过 DfuEncoder 生成一层 InterChipPacket 并序列化
-/// - 使用 InterChipDecoder + DfuDecoder 反解得到二层结构
+/// - 使用 DfuMessage 构造二层负载（DfuCmd + DfuVersion + DfuPayload）；
+/// - 通过 DfuEncoder 生成一层 InterChipPacket 并序列化；
+/// - 使用 InterChipDecoder + DfuDecoder 反解得到二层结构。
+///
+/// 参数：
+/// - 无
+///
+/// 返回值：
+/// - void（在控制台打印编码与解码结果）
 void example7() {
   print('');
   print('7. 二层协议：DFU 编码与解码示例');
