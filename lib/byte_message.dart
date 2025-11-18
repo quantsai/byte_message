@@ -8,6 +8,9 @@ library;
 export 'src/models/layer1/inter_chip_models.dart';
 export 'src/models/layer2/control_bus_models.dart';
 export 'src/models/layer2/dfu_models.dart';
+// 导出二层命令枚举（公开枚举供外部使用）
+export 'src/models/layer2/control_bus_cmd.dart';
+export 'src/models/layer2/dfu_cmd.dart';
 
 // 导出协议常量
 export 'src/constants/packet_constants.dart';

@@ -20,6 +20,6 @@ class ControlBusEncoder implements Layer2PayloadEncoder<ControlBusMessage> {
   /// - List<int>：仅包含二层内容 [cbCmd] + cbPayload，不含任何一层字段
   @override
   List<int> encode(ControlBusMessage message) {
-    return <int>[message.cbCmd, ...message.cbPayload];
+    return <int>[message.cbCmd.code, ...message.cbPayload];
   }
 }

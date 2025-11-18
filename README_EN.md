@@ -45,7 +45,7 @@ Inter-chip 协议是一个用于芯片间通信的二进制协议，支持：
 
 ```yaml
 dependencies:
-  byte_message: ^1.3.1
+byte_message: ^1.4.0
 ```
 
 然后运行：
@@ -167,7 +167,7 @@ python3 -m http.server 8000 &
 
 ```yaml
 dependencies:
-  byte_message: ^1.3.1
+byte_message: ^1.4.0
 ```
 
 ### 基础使用
@@ -303,7 +303,7 @@ void main() {
 
   // Control Bus 二层解码
   final cbMsg = ControlBusDecoder().decode(cbBytes);
-  print('Layer2 ControlBus decoded cmd: 0x${cbMsg?.cbCmd.toRadixString(16)}, payload: ${cbMsg?.cbPayload}');
+  print('Layer2 ControlBus decoded cmd: 0x${cbMsg?.cbCmd.code.toRadixString(16)}, payload: ${cbMsg?.cbPayload}');
 
   // DFU 二层编码
   final l2Dfu = DfuMessage(dfuCmd: DfuCmd.startUpgrade, dfuVersion: 0x01, dfuPayload: const []);
@@ -312,7 +312,7 @@ void main() {
 
   // DFU 二层解码
   final dfuMsg = DfuDecoder().decode(dfuBytes);
-  print('Layer2 DFU decoded cmd: 0x${dfuMsg?.dfuCmd.toRadixString(16)}, ver: ${dfuMsg?.dfuVersion}, payload: ${dfuMsg?.dfuPayload}');
+  print('Layer2 DFU decoded cmd: 0x${dfuMsg?.dfuCmd.code.toRadixString(16)}, ver: ${dfuMsg?.dfuVersion}, payload: ${dfuMsg?.dfuPayload}');
 }
 ```
 

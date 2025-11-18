@@ -47,7 +47,7 @@ Add the dependency in `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  byte_message: ^1.3.1
+byte_message: ^1.4.0
 ```
 
 Then run:
@@ -152,14 +152,14 @@ void main() {
   final cbBytes = ControlBusEncoder().encode(l2Cb);
   print('Layer2 ControlBus encoded: ${cbBytes.map((b) => b.toRadixString(16).padLeft(2, '0')).toList()}');
   final cbMsg = ControlBusDecoder().decode(cbBytes);
-  print('Layer2 ControlBus decoded cmd: 0x${cbMsg?.cbCmd.toRadixString(16)}, payload: ${cbMsg?.cbPayload}');
+  print('Layer2 ControlBus decoded cmd: 0x${cbMsg?.cbCmd.code.toRadixString(16)}, payload: ${cbMsg?.cbPayload}');
 
   // DFU
   final l2Dfu = DfuMessage(dfuCmd: DfuCmd.startUpgrade, dfuVersion: 0x01, dfuPayload: const []);
   final dfuBytes = DfuEncoder().encode(l2Dfu);
   print('Layer2 DFU encoded: ${dfuBytes.map((b) => b.toRadixString(16).padLeft(2, '0')).toList()}');
   final dfuMsg = DfuDecoder().decode(dfuBytes);
-  print('Layer2 DFU decoded cmd: 0x${dfuMsg?.dfuCmd.toRadixString(16)}, ver: ${dfuMsg?.dfuVersion}, payload: ${dfuMsg?.dfuPayload}');
+  print('Layer2 DFU decoded cmd: 0x${dfuMsg?.dfuCmd.code.toRadixString(16)}, ver: ${dfuMsg?.dfuVersion}, payload: ${dfuMsg?.dfuPayload}');
 }
 ```
 

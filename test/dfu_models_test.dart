@@ -1,5 +1,6 @@
 import 'package:test/test.dart';
 import 'package:byte_message/byte_message.dart';
+import 'package:byte_message/src/models/layer2/dfu_cmd.dart';
 
 void main() {
   group('Layer2 DFU Models: DfuMessage', () {
@@ -11,14 +12,16 @@ void main() {
     test('fromBytes parses cmd/version/payload', () {
       final msg = DfuMessage.fromBytes(const [0x01, 0x10, 0xAA, 0xBB]);
       expect(msg, isNotNull);
-      expect(msg!.dfuCmd, equals(0x01));
+      expect(msg!.dfuCmd, equals(DfuCmd.getDeviceInfo));
       expect(msg.dfuVersion, equals(0x10));
       expect(msg.dfuPayload, equals(const [0xAA, 0xBB]));
     });
 
     test('toPacket builds InterChipPacket with CMD_DFU', () {
-      final msg =
-          DfuMessage(dfuCmd: 0x02, dfuVersion: 0x01, dfuPayload: const [0xAA]);
+      final msg = DfuMessage(
+          dfuCmd: DfuCmd.startUpgrade,
+          dfuVersion: 0x01,
+          dfuPayload: const [0xAA]);
       final pkt = msg.toPacket();
       expect(pkt.cmd, equals(InterChipCmds.dfu));
       expect(pkt.payload, equals(const [0x02, 0x01, 0xAA]));
@@ -41,7 +44,7 @@ void main() {
           cmd: InterChipCmds.dfu, payload: const [0x05, 0x02, 0x99]);
       final msg = DfuMessage.fromPacket(pkt);
       expect(msg, isNotNull);
-      expect(msg!.dfuCmd, equals(0x05));
+      expect(msg!.dfuCmd, equals(DfuCmd.writeUpgradeChunk));
       expect(msg.dfuVersion, equals(0x02));
       expect(msg.dfuPayload, equals(const [0x99]));
     });

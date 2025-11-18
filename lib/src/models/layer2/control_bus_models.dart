@@ -12,10 +12,12 @@
 /// |Flag|Len|Cmd|_CbCmd_|_CbPayload_|Checksum|
 library;
 
+import 'control_bus_cmd.dart';
+
 /// Control Bus 二层消息
 class ControlBusMessage {
-  /// 子命令（u8）
-  final int cbCmd;
+  /// 子命令（枚举，持有 u8 code）
+  final CbCmd cbCmd;
 
   /// 子负载（字节数组）
   final List<int> cbPayload;
@@ -42,14 +44,17 @@ class ControlBusMessage {
     if (bytes.isEmpty) {
       return null;
     }
-    final cbCmd = bytes[0];
+    final cbCmd = CbCmd.fromCode(bytes[0]);
+    if (cbCmd == null) {
+      return null; // 未知命令码
+    }
     final cbPayload = bytes.length > 1 ? bytes.sublist(1) : <int>[];
     return ControlBusMessage(cbCmd: cbCmd, cbPayload: cbPayload);
   }
 
   @override
   String toString() =>
-      'ControlBusMessage{cbCmd: 0x${cbCmd.toRadixString(16).padLeft(2, '0')}, cbPayload: $cbPayload}';
+      'ControlBusMessage{cbCmd: 0x${cbCmd.code.toRadixString(16).padLeft(2, '0')}, cbPayload: $cbPayload}';
 
   @override
   bool operator ==(Object other) {

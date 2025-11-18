@@ -4,6 +4,8 @@ import 'package:byte_message/byte_message.dart';
 import 'package:byte_message/src/protocols/layer3/control_bus/get_device_language.dart';
 // 字节打包工具未在公共出口中导出，测试使用内部模块路径
 import 'package:byte_message/src/utils/byte_packing.dart';
+// 枚举命令未在公共出口中导出，测试使用内部模块路径
+import 'package:byte_message/src/models/layer2/control_bus_cmd.dart';
 
 void main() {
   group('L3 SetSpeed (speed_control)', () {
@@ -50,19 +52,22 @@ void main() {
     test('fromBytes parses cbCmd and cbPayload slice', () {
       final msg = ControlBusMessage.fromBytes(const [0x36, 0xAA, 0xBB]);
       expect(msg, isNotNull);
-      expect(msg!.cbCmd, 0x36);
+      expect(msg!.cbCmd, CbCmd.electricalMetricsRequest);
       expect(msg.cbPayload, equals([0xAA, 0xBB]));
     });
 
     test('== and hashCode for identical payload', () {
-      final a = ControlBusMessage(cbCmd: 0x41, cbPayload: const [1, 2]);
-      final b = ControlBusMessage(cbCmd: 0x41, cbPayload: const [1, 2]);
+      final a = ControlBusMessage(
+          cbCmd: CbCmd.speedControlRequest, cbPayload: const [1, 2]);
+      final b = ControlBusMessage(
+          cbCmd: CbCmd.speedControlRequest, cbPayload: const [1, 2]);
       expect(a, equals(b));
       expect(a.hashCode, equals(b.hashCode));
     });
 
     test('toString contains hex-formatted cbCmd', () {
-      final msg = ControlBusMessage(cbCmd: 0x82, cbPayload: const [0x00]);
+      final msg = ControlBusMessage(
+          cbCmd: CbCmd.foldControlRequest, cbPayload: const [0x00]);
       expect(msg.toString().contains('0x82'), isTrue);
     });
   });

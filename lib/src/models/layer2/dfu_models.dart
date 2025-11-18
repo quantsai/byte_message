@@ -15,11 +15,12 @@ library;
 
 import '../layer1/inter_chip_models.dart';
 import '../../constants/packet_constants.dart';
+import 'dfu_cmd.dart';
 
 /// DFU 二层消息
 class DfuMessage {
-  /// 子命令（u8）
-  final int dfuCmd;
+  /// 子命令（枚举，持有 u8 code）
+  final DfuCmd dfuCmd;
 
   /// 协议版本（u8）
   final int dfuVersion;
@@ -53,7 +54,10 @@ class DfuMessage {
     if (packet.payload.length < 2) {
       return null; // 至少包含 dfuCmd 与 dfuVersion
     }
-    final dfuCmd = packet.payload[0];
+    final dfuCmd = DfuCmd.fromCode(packet.payload[0]);
+    if (dfuCmd == null) {
+      return null; // 未知命令码
+    }
     final dfuVersion = packet.payload[1];
     final dfuPayload =
         packet.payload.length > 2 ? packet.payload.sublist(2) : <int>[];
@@ -75,7 +79,10 @@ class DfuMessage {
     if (bytes.length < 2) {
       return null; // 至少包含 dfuCmd 与 dfuVersion
     }
-    final dfuCmd = bytes[0];
+    final dfuCmd = DfuCmd.fromCode(bytes[0]);
+    if (dfuCmd == null) {
+      return null; // 未知命令码
+    }
     final dfuVersion = bytes[1];
     final dfuPayload = bytes.length > 2 ? bytes.sublist(2) : <int>[];
     return DfuMessage(
@@ -94,7 +101,7 @@ class DfuMessage {
   /// 返回值：
   /// - InterChipPacket：Cmd 固定为 InterChipCmds.dfu（0x20），payload 为 [dfuCmd, dfuVersion] + dfuPayload
   InterChipPacket toPacket() {
-    final payload = <int>[dfuCmd, dfuVersion, ...dfuPayload];
+    final payload = <int>[dfuCmd.code, dfuVersion, ...dfuPayload];
     return InterChipPacket(
       cmd: InterChipCmds.dfu,
       payload: payload,
@@ -103,7 +110,7 @@ class DfuMessage {
 
   @override
   String toString() =>
-      'DfuMessage{dfuCmd: 0x${dfuCmd.toRadixString(16).padLeft(2, '0')}, dfuVersion: $dfuVersion, dfuPayload: $dfuPayload}';
+      'DfuMessage{dfuCmd: 0x${dfuCmd.code.toRadixString(16).padLeft(2, '0')}, dfuVersion: $dfuVersion, dfuPayload: $dfuPayload}';
 
   @override
   bool operator ==(Object other) {

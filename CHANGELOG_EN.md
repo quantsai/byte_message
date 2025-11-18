@@ -40,3 +40,39 @@ All notable changes to this project will be documented in this file.
 ---
 
 Language switch: 中文版更新日志 → [CHANGELOG.md](CHANGELOG.md)
+
+## 1.4.0 — Minor release with API updates (2025-11-18)
+
+### API updates
+
+- Layer 2 models now use enhanced enums for subcommands:
+  - Control Bus: `ControlBusMessage.cbCmd: int -> CbCmd`
+  - DFU: `DfuMessage.dfuCmd: int -> DfuCmd`
+- Encoders updated to use `enum.code` when writing bytes:
+  - `ControlBusEncoder` / `DfuEncoder`
+- Decoding and models updated to map bytes via `CbCmd.fromCode` / `DfuCmd.fromCode`.
+  Unknown codes return `null` from `fromBytes`.
+
+### Migration guide
+
+1. Replace plain integers with enums when constructing Layer 2 models:
+   - Old: `ControlBusMessage(cbCmd: 0x30, ...)`
+   - New: `ControlBusMessage(cbCmd: CbCmd.batteryStatusRequest, ...)`
+   - Old: `DfuMessage(dfuCmd: 0x02, ...)`
+   - New: `DfuMessage(dfuCmd: DfuCmd.startUpgrade, ...)`
+2. For printing/asserting command codes, use the enum’s `code`:
+   - `msg.cbCmd.code.toRadixString(16)` / `msg.dfuCmd.code`
+3. Decoders may return `null` if encountering unknown subcommand codes; handle nulls accordingly.
+4. Enums are exported from the public entry now:
+   - `package:byte_message/byte_message.dart` (new export)
+     Or via internal paths if needed.
+
+### Docs & examples
+
+- README updated to `^1.4.0` and sample code uses enums and `.code`.
+- Added root-level "说明文档.md" (Chinese project doc) with planning, execution steps and progress.
+
+### QA
+
+- `dart analyze` (No issues found)
+- `dart test -r expanded` (All tests passed)

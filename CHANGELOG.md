@@ -187,3 +187,39 @@
 
 - 测试执行：`dart test -r compact`（All 118 tests passed）
 - 覆盖率脚本：`./run_tests.sh coverage` 成功产出 lcov.info 与 HTML 报告
+
+## 1.4.0 (2025-11-18)
+
+### 功能更新与 API 调整
+
+- 二层模型字段由整型改为增强枚举，提升类型安全与可读性：
+  - ControlBus：`ControlBusMessage.cbCmd: int -> CbCmd`
+  - DFU：`DfuMessage.dfuCmd: int -> DfuCmd`
+- 编码器更新：
+  - `ControlBusEncoder` 与 `DfuEncoder` 现使用 `enum.code` 进行编码（原先直接写入 int）。
+- 解码器与模型更新：
+  - `ControlBusMessage.fromBytes` / `DfuMessage.fromBytes` 使用 `CbCmd.fromCode` / `DfuCmd.fromCode` 将字节映射为枚举；未知码返回 `null`。
+
+### 迁移指南（如使用了二层模型的整型命令码）
+
+1. 构造二层模型时，将 `cbCmd`/`dfuCmd` 的整型参数替换为枚举值：
+   - 旧：`ControlBusMessage(cbCmd: 0x30, ...)`
+   - 新：`ControlBusMessage(cbCmd: CbCmd.batteryStatusRequest, ...)`
+   - 旧：`DfuMessage(dfuCmd: 0x02, ...)`
+   - 新：`DfuMessage(dfuCmd: DfuCmd.startUpgrade, ...)`
+2. 若需打印或断言命令码，请使用 `enum.code`：
+   - `msg.cbCmd.code.toRadixString(16)` / `msg.dfuCmd.code`
+3. 解码返回为 `null` 的场景：当遇到未知子命令码时，`fromBytes` 将返回 `null`，调用方需做空值检查。
+4. 如需直接使用枚举，请从公共入口或内部路径导入：
+   - 公共入口：`package:byte_message/byte_message.dart`（已新增导出）
+   - 内部路径：`package:byte_message/src/models/layer2/control_bus_cmd.dart`、`.../dfu_cmd.dart`
+
+### 文档与示例
+
+- README 依赖版本更新为 `^1.4.0`，示例代码改为使用枚举与 `.code` 访问。
+- 新增根目录「说明文档.md」，记录项目规划、实施方案与进度节点（详见该文档）。
+
+### 质量保证
+
+- `dart analyze`（No issues found）
+- `dart test -r expanded`（All tests passed）
