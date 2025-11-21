@@ -49,7 +49,7 @@
 ### 异常结构调整：DecoderException 独立文件
 
 - 将通用解码器异常 `DecoderException` 从 `layer1_packet_decoder.dart` 移至独立文件 `src/interfaces/decoder_exception.dart`
-- 目的：解耦接口与异常实现，保持接口文件仅承载抽象定义。
+- 目的：解耦合接口与异常实现，保持接口文件仅承载抽象定义。
 - 适配：`InterChipDecoder` 显式导入新的异常文件路径（如需抛出内部一致性错误）。
 - 验证：`dart analyze`（No issues found）与 `dart test -r compact`（All tests passed）均通过。
 
@@ -188,9 +188,12 @@
 - 测试执行：`dart test -r compact`（All 118 tests passed）
 - 覆盖率脚本：`./run_tests.sh coverage` 成功产出 lcov.info 与 HTML 报告
 
-## 1.4.0 (2025-11-18)
+## 1.4.1 (2025-11-18)
 
-### 功能更新与 API 调整
+- 维护版本：完善发布流程文档与说明，无 API 变化。
+- 兼容性：与 1.4.0 保持完全兼容，用户可继续依赖 `^1.4.0`。
+- 质量：测试用例全量通过（包含 ControlBus/DFU/工厂集成）。
+- 功能更新与 API 调整
 
 - 二层模型字段由整型改为增强枚举，提升类型安全与可读性：
   - ControlBus：`ControlBusMessage.cbCmd: int -> CbCmd`

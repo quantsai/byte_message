@@ -1,6 +1,6 @@
 name: byte_message
 description: "Inter-chip 协议编码/解码的纯 Dart 库：提供数据包模型、常量、工具方法、编码器与解码器，支持 |Flag|Len|LenH|Cmd|Payload|Checksum| 格式。"
-version: 1.4.0
+version: 1.4.1
 homepage: https://gitee.com/quantsai/byte-message.git
 repository: 'https://gitee.com/quantsai/byte-message.git'
 issue_tracker: https://gitee.com/quantsai/byte-message/issues

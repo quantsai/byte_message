@@ -76,3 +76,9 @@ Language switch: 中文版更新日志 → [CHANGELOG.md](CHANGELOG.md)
 
 - `dart analyze` (No issues found)
 - `dart test -r expanded` (All tests passed)
+
+## 1.4.1
+
+- Maintenance release: clarifications for publishing workflow, no API changes.
+- Compatibility: fully compatible with 1.4.0; users can keep `^1.4.0`.
+- Quality: all tests pass (ControlBus/DFU/factory integration).

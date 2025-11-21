@@ -41,12 +41,18 @@ export 'src/protocols/layer3/control_bus/get_electrical_metrics.dart';
 export 'src/protocols/layer3/control_bus/get_device_status.dart';
 export 'src/protocols/layer3/control_bus/get_operating_mode.dart';
 export 'src/protocols/layer3/control_bus/get_speed_gear.dart';
+export 'src/protocols/layer3/control_bus/get_device_language.dart';
+export 'src/protocols/layer3/control_bus/get_mute_status.dart';
+
 export 'src/protocols/layer3/control_bus/set_pushrod_speed.dart';
 export 'src/protocols/layer3/control_bus/set_speed.dart';
 export 'src/protocols/layer3/control_bus/set_operating_mode.dart';
 export 'src/protocols/layer3/control_bus/set_speed_gear.dart';
 export 'src/protocols/layer3/control_bus/set_joystick.dart';
 export 'src/protocols/layer3/control_bus/set_fold_state.dart';
+export 'src/protocols/layer3/control_bus/set_device_language.dart';
+export 'src/protocols/layer3/control_bus/set_mute_status.dart';
+
 // 导出第三层协议（DFU）
 export 'src/protocols/layer3/dfu/get_device_info.dart';
 export 'src/protocols/layer3/dfu/start_upgrade.dart';
