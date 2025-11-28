@@ -45,7 +45,7 @@ Inter-chip 协议是一个用于芯片间通信的二进制协议，支持：
 
 ```yaml
 dependencies:
-byte_message: ^1.5.0
+byte_message: ^1.5.1
 ```
 
 然后运行：
