@@ -51,6 +51,19 @@ List<int> packS16BE(int value) {
   return [b.getUint8(0), b.getUint8(1)];
 }
 
+/// 将 s16 的值，小端序（LE），打包为 2 字节
+///
+/// 功能：按小端序（低字节在前）输出 s16 的二进制表示，便于与使用 LE 的协议对接。
+/// 参数：
+/// - [value] -32768..32767 的有符号数（s16）。
+/// 返回：
+/// - [List<int>] [b0, b1]，其中 b0 为低字节，b1 为高字节。
+List<int> packS16LE(int value) {
+  final b = ByteData(2);
+  b.setInt16(0, value, Endian.little);
+  return [b.getUint8(0), b.getUint8(1)];
+}
+
 /// 将 s32 的值， 大端序（BE），打包为 4 字节。
 ///
 /// 参数：
@@ -61,6 +74,19 @@ List<int> packS16BE(int value) {
 List<int> packS32BE(int value) {
   final b = ByteData(4);
   b.setInt32(0, value, Endian.big);
+  return [b.getUint8(0), b.getUint8(1), b.getUint8(2), b.getUint8(3)];
+}
+
+/// 将 s32 的值，小端序（LE），打包为 4 字节。
+///
+/// 功能：按小端序（低字节在前）输出 s32 的二进制表示，常用于 LE 设备/文件格式写入。
+/// 参数：
+/// - [value] -2147483648..2147483647 的有符号数（s32）。
+/// 返回：
+/// - [List<int>] [b0, b1, b2, b3]，其中 b0 为最低字节，b3 为最高字节。
+List<int> packS32LE(int value) {
+  final b = ByteData(4);
+  b.setInt32(0, value, Endian.little);
   return [b.getUint8(0), b.getUint8(1), b.getUint8(2), b.getUint8(3)];
 }
 
@@ -76,6 +102,19 @@ List<int> packU16BE(int value) {
   return [b0, b1];
 }
 
+/// 将 u16 的值, 小端序（LE），打包为 2 字节
+///
+/// 功能：按小端序输出 u16（低字节在前），用于与 LE 协议字段对齐。
+/// 参数：
+/// - [value] 0..65535 的无符号数（u16）。
+/// 返回：
+/// - [List<int>] [b0, b1]，其中 b0 为低字节，b1 为高字节。
+List<int> packU16LE(int value) {
+  final b0 = value & 0xFF;
+  final b1 = (value >> 8) & 0xFF;
+  return [b0, b1];
+}
+
 /// 将 u32 的值, 大端序（BE），打包为 4 个字节
 ///
 /// 参数：
@@ -85,6 +124,19 @@ List<int> packU16BE(int value) {
 List<int> packU32BE(int value) {
   final b = ByteData(4);
   b.setUint32(0, value, Endian.big);
+  return [b.getUint8(0), b.getUint8(1), b.getUint8(2), b.getUint8(3)];
+}
+
+/// 将 u32 的值, 小端序（LE），打包为 4 个字节
+///
+/// 功能：按小端序输出 u32（低字节在前），适配常见的 LE 协议/文件格式。
+/// 参数：
+/// - [value] 0..4294967295 的无符号数（u32）。
+/// 返回：
+/// - [List<int>] [b0, b1, b2, b3]，其中 b0 为最低字节，b3 为最高字节。
+List<int> packU32LE(int value) {
+  final b = ByteData(4);
+  b.setUint32(0, value, Endian.little);
   return [b.getUint8(0), b.getUint8(1), b.getUint8(2), b.getUint8(3)];
 }
 
@@ -107,16 +159,23 @@ int readU16BE(List<int> bytes) {
   return (b0 << 8) | b1;
 }
 
-/// 从 4 字节的大端序（BE）数组读取一个无符号 32 位整数（U32）。
+/// 从 2 字节的小端序（LE）数组读取一个无符号 16 位整数（U16）。
 ///
-/// 功能：
-/// - 将 [bytes] 的 4 个字节当作 BE 序（高字节在前），组合为一个十进制整型数值（0..4294967295）。
-///
+/// 功能：将 [bytes] 的 2 个字节按 LE（低字节在前）组合为十进制整型（0..65535）。
 /// 参数：
-/// - [bytes] 至少包含 4 个字节，按 BE 顺序排列：[b0, b1, b2, b3]。
-///
+/// - [bytes] 至少包含 2 个字节，顺序为：[低字节, 高字节]。
 /// 返回：
-/// - [int] 无符号 32 位整数值（U32）。
+/// - [int] 无符号 16 位整数值（U16）。
+int readU16LE(List<int> bytes) {
+  if (bytes.length < 2) {
+    throw ArgumentError('readU16LE requires 2 bytes, got ${bytes.length}');
+  }
+  final b0 = bytes[0] & 0xFF;
+  final b1 = bytes[1] & 0xFF;
+  return (b1 << 8) | b0;
+}
+
+/// 从 4 字节的大端序（BE）数组读取一个无符号 32 位整数（U32）。
 int readU32BE(List<int> bytes) {
   if (bytes.length < 4) {
     throw ArgumentError('readU32BE requires 4 bytes, got ${bytes.length}');
@@ -126,6 +185,24 @@ int readU32BE(List<int> bytes) {
   final b2 = bytes[2] & 0xFF;
   final b3 = bytes[3] & 0xFF;
   return (b0 << 24) | (b1 << 16) | (b2 << 8) | b3;
+}
+
+/// 从 4 字节的小端序（LE）数组读取一个无符号 32 位整数（U32）。
+///
+/// 功能：将 [bytes] 的 4 个字节按 LE（低字节在前）组合为十进制整型（0..4294967295）。
+/// 参数：
+/// - [bytes] 至少包含 4 个字节，顺序为：[最低, 次低, 次高, 最高]。
+/// 返回：
+/// - [int] 无符号 32 位整数值（U32）。
+int readU32LE(List<int> bytes) {
+  if (bytes.length < 4) {
+    throw ArgumentError('readU32LE requires 4 bytes, got ${bytes.length}');
+  }
+  final b0 = bytes[0] & 0xFF;
+  final b1 = bytes[1] & 0xFF;
+  final b2 = bytes[2] & 0xFF;
+  final b3 = bytes[3] & 0xFF;
+  return (b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
 }
 
 // 将 u32 值转换成一个数字（0..4294967295）
@@ -147,15 +224,38 @@ List<int> packF32BE(double value) {
   return [b0, b1, b2, b3];
 }
 
-/// 把浮点数转换成 2 字节的大端序（BE）数组。
+/// 把浮点数转换成 4 字节的小端序（LE）数组。
 ///
+/// 功能：按 LE 输出 32 位浮点的整型近似值（示例保持与 BE 同风格）。
 /// 参数：
 /// - [value] 浮点数（double）。
 /// 返回：
-/// - [List<int>] 2 字节的大端序数组（[b0, b1]）。
+/// - [List<int>] 4 字节的小端序数组（[低, 次低, 次高, 高]）。
+List<int> packF32LE(double value) {
+  final b0 = value.toInt() & 0xFF;
+  final b1 = (value.toInt() >> 8) & 0xFF;
+  final b2 = (value.toInt() >> 16) & 0xFF;
+  final b3 = (value.toInt() >> 24) & 0xFF;
+  return [b0, b1, b2, b3];
+}
+
+/// 把浮点数转换成 2 字节的大端序（BE）数组。
 List<int> packF16BE(double value) {
   final b0 = (value.toInt() >> 8) & 0xFF;
   final b1 = value.toInt() & 0xFF;
+  return [b0, b1];
+}
+
+/// 把浮点数转换成 2 字节的小端序（LE）数组。
+///
+/// 功能：按 LE 输出 16 位浮点的整型近似值（示例保持与 BE 同风格）。
+/// 参数：
+/// - [value] 浮点数（double）。
+/// 返回：
+/// - [List<int>] 2 字节的小端序数组（[低, 高]）。
+List<int> packF16LE(double value) {
+  final b0 = value.toInt() & 0xFF;
+  final b1 = (value.toInt() >> 8) & 0xFF;
   return [b0, b1];
 }
 
