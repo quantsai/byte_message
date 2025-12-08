@@ -248,6 +248,31 @@ void main() {
       expect(res.data, isNotNull);
     });
 
+    /// 功能描述：验证 ControlBusFactory.encodePlayHornReq 生成的一层字节流，
+    /// 能被第一层与第二层解码为预期的 Cmd 与 CbCmd，并包含第三层请求负载（u16 BE 毫秒）。
+    test('encode play horn request -> decode L1/L2/L3 content', () {
+      final bytes = ControlBusFactory().encodePlayHornReq(durationMs: 1500);
+
+      final l1 = InterChipDecoder().decode(bytes);
+      expect(l1, isNotNull);
+      expect(l1!.cmd, InterChipCmds.normal);
+
+      final l2 = ControlBusDecoder().decode(l1.payload);
+      expect(l2, isNotNull);
+      expect(l2!.cbCmd, CbCmd.hornControlRequest);
+      expect(l2.cbPayload, equals([0x05, 0xDC])); // 1500 -> 0x05DC
+    });
+
+    /// 功能描述：构造空负载 AckOK，验证 decodePlayHornAck 能正确解析为 Ack。
+    test('decode play horn ack -> ack-only', () {
+      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const []);
+      final raw = InterChipEncoder().encode(ack);
+
+      final res = ControlBusFactory().decodePlayHornAck(raw);
+      expect(res.status, InterChipCmds.ackOk);
+      expect(res.data, isNotNull);
+    });
+
     /// 功能描述：构造空负载 AckOK，验证 decodeSetJoystickAck 能正确解析为 Ack。
     test('decode set joystick ack -> ack-only', () {
       final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const []);
@@ -311,6 +336,13 @@ void main() {
       final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x00]);
       final raw = InterChipEncoder().encode(ack);
       expect(() => ControlBusFactory().decodeSpeedControlAck(raw), throwsArgumentError);
+    });
+
+    /// 负例：播放喇叭 Ack-only 应答带有非空第三层负载时应抛出 ArgumentError
+    test('decode play horn ack with non-empty payload throws', () {
+      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x00]);
+      final raw = InterChipEncoder().encode(ack);
+      expect(() => ControlBusFactory().decodePlayHornAck(raw), throwsArgumentError);
     });
 
     /// 负例：功能模式应答载荷长度不为 1 应抛出 ArgumentError

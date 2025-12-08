@@ -108,7 +108,7 @@
   - `StateError`：不合法的状态组合（如 len 为 null 而 lenH 非 null）
 - 测试更新：将 `throwsA(isA<EncoderException>())` 分别改为 `throwsA(isA<RangeError>())` 与 `throwsA(isA<ArgumentError>())`，保持语义一致。
 - 说明：接口层不再约束自定义异常，推荐实现层使用 Dart 标准异常以提升通用性与可读性。
-- 验证：`dart analyze`（No issues found）与 `dart test -r expanded`（All tests passed）均通过。
+- 验证：`dart analyze`（No issues found）与 `dart test -r expanded`（All tests passed）
 
 ### 新增：第三层协议（Control Bus）- 请求连接协议
 
@@ -125,6 +125,29 @@
   - 更新：测试已改为实例化 `DeviceConnectionRequest()` 并调用 `encode()`；非法版本在构造时抛出 `RangeError`
   - 更新：响应模型断言改为 `resp.model` 字符串（不再检查原始 `modelBytes` 与 `modelString`）；版本断言为 `'0.0.0'`，序列号断言为 `'000'`
 - 验证：`dart analyze`（No issues found）与 `dart test -r expanded`（All tests passed）
+
+## 1.6.0 (2025-12-08)
+
+### 新增：Control Bus 按喇叭（Play Horn）
+
+- Layer2：新增 `CbCmd.hornControlRequest (0x4F)`。
+- Layer3：请求载荷为 `durationMs`（毫秒，u16 BE）。
+- Layer1：应答为 `AckOK (0x02)`，Ack-only（无第三层负载）。
+- 工厂方法：`ControlBusFactory.encodePlayHornReq(...)` 与 `ControlBusFactory.decodePlayHornAck(...)`。
+- 示例：`example/control_bus/play_horn_factory_example.dart` 展示编码与 Ack-only 解码。
+- 导出：在 `lib/byte_message.dart` 公开导出 `play_horn.dart`。
+
+### 修复：DFU 写升级包头部字段字节序
+
+- 位置：`src/protocols/layer3/dfu/write_upgrade_chunk.dart`。
+- 变更：将 `DfuBlob` 的头部字段（PageId/BlobId/BlobSize/BlobStart）编码改为大端序（BE）。
+- 背景：此前为 LE 导致集成测试期望（BE）不一致。
+
+### 质量与测试
+
+- 新增集成测试（ControlBus）：`encodePlayHornReq` 编码往返、`decodePlayHornAck` Ack-only 解码、负例。
+- 更新常量测试：加入 `hornControlRequest (0x4F)` 并将唯一值计数更新为 17。
+- 全量测试通过：`dart test -r expanded` All tests passed。
 
 ## 1.3.0 (2025-11-06)
 

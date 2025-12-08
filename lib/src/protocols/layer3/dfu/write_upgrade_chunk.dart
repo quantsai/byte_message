@@ -76,10 +76,10 @@ class DfuBlob {
   /// - List<int>：按顺序拼接 PageId/BlobId/BlobSize/BlobStart/BlobData
   List<int> encode() {
     final out = <int>[];
-    out.addAll(packU16LE(pageId));
-    out.addAll(packU16LE(blobId));
-    out.addAll(packU16LE(blobSize));
-    out.addAll(packU16LE(blobStart));
+    out.addAll(packU16BE(pageId));
+    out.addAll(packU16BE(blobId));
+    out.addAll(packU16BE(blobSize));
+    out.addAll(packU16BE(blobStart));
     out.addAll(blobData);
     return out;
   }

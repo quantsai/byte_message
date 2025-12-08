@@ -40,6 +40,11 @@ enum CbCmd {
   /// 速度档位控制请求（Speed Gear Control / Set Speed Gear Request）
   speedGearControlRequest(0x4E),
 
+  /// 播放喇叭控制请求（Horn Control / Play Horn Request）
+  ///
+  /// 说明：第三层负载为时长（u16，毫秒，BE）。
+  hornControlRequest(0x4F),
+
   /// 摇杆控制请求（Joystick Control / Set Joystick Request）
   joystickControlRequest(0x81),
 

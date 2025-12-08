@@ -33,6 +33,7 @@ import '../protocols/layer3/control_bus/set_operating_mode.dart';
 import '../protocols/layer3/control_bus/set_speed_gear.dart';
 import '../protocols/layer3/control_bus/set_joystick.dart';
 import '../protocols/layer3/control_bus/set_fold_state.dart';
+import '../protocols/layer3/control_bus/play_horn.dart';
 import '../models/decode_result.dart';
 import '../models/layer2/control_bus_cmd.dart';
 
@@ -571,7 +572,8 @@ class ControlBusFactory {
   /// 返回：
   /// - 当一层 Cmd 为 AckOK 且第三层载荷长度为 1 时，返回解析后的 GetDeviceLanguageRes；
   /// - 否则返回状态并置 data 为 null。
-  DecodeResult<GetDeviceLanguageRes> decodeDeviceLanguageRes(List<int> rawData) {
+  DecodeResult<GetDeviceLanguageRes> decodeDeviceLanguageRes(
+      List<int> rawData) {
     // 1) Layer1 解码
     final l1 = InterChipDecoder().decode(rawData);
     if (l1 == null) {
@@ -739,7 +741,8 @@ class ControlBusFactory {
     int? flag,
   }) {
     // 1) Layer3：创建请求对象并编码第三层负载（u8 语言值）
-    final l3Payload = SetDeviceLanguageReq(language: language).encode(); // [lang]
+    final l3Payload =
+        SetDeviceLanguageReq(language: language).encode(); // [lang]
 
     // 2) Layer2 封装：CbCmd=0x83（设置设备语言），CbPayload=第三层负载
     final l2Message = ControlBusMessage(
@@ -783,6 +786,42 @@ class ControlBusFactory {
       cbPayload: l3Payload,
     );
     final l2 = ControlBusEncoder().encode(l2Message); // [0x84, state]
+
+    // 3) Layer1 包装：Cmd=0xF8（普通指令），Payload=二层负载
+    final packet = InterChipPacket(
+      flag: flag,
+      cmd: InterChipCmds.normal,
+      payload: l2,
+    );
+
+    return InterChipEncoder().encode(packet);
+  }
+
+  /// 编码：播放喇叭请求（一次调用产出最终一层字节流）
+  ///
+  /// 功能描述：
+  /// - 将第三层“播放喇叭请求”的负载（时长 u16 毫秒，BE）编码为二层 ControlBusMessage（CbCmd=0x4F），
+  ///   再包装为一层 InterChipPacket（Cmd=0xF8 普通指令），最终输出完整字节序列。
+  ///
+  /// 参数说明：
+  /// - [durationMs] 播放时长（毫秒，0..65535，对应 u16 BE）
+  /// - [flag] 可选：指定一层 Flag（u8）。若为 null，则编码器根据负载自动选择短帧/长帧并默认启用校验和。
+  ///
+  /// 返回值：
+  /// - List<int>：完整的一层字节流，可直接发送。
+  List<int> encodePlayHornReq({
+    required int durationMs,
+    int? flag,
+  }) {
+    // 1) Layer3：创建请求对象并编码第三层负载（u16 BE 毫秒）
+    final l3Payload = PlayHornReq(durationMs: durationMs).encode(); // [dur(2)]
+
+    // 2) Layer2 封装：CbCmd=0x4F（播放喇叭），CbPayload=第三层负载
+    final l2Message = ControlBusMessage(
+      cbCmd: CbCmd.hornControlRequest,
+      cbPayload: l3Payload,
+    );
+    final l2 = ControlBusEncoder().encode(l2Message); // [0x4F, ...]
 
     // 3) Layer1 包装：Cmd=0xF8（普通指令），Payload=二层负载
     final packet = InterChipPacket(
@@ -883,6 +922,36 @@ class ControlBusFactory {
     // 2) Layer3 解码为业务模型（无载荷，仅 Ack）
     const resp = SetMuteStatusAck();
     return DecodeResult<SetMuteStatusAck>(status: l1.cmd, data: resp);
+  }
+
+  /// 解码：播放喇叭应答（一次调用从一层原始字节流还原第三层模型）
+  ///
+  /// 返回：
+  /// - 当一层 Cmd 为 AckOK 且第三层载荷长度为 0 时，返回解析后的 PlayHornAck；
+  /// - 否则返回状态并置 data 为 null。
+  DecodeResult<PlayHornAck> decodePlayHornAck(List<int> rawData) {
+    // 1) Layer1 解码
+    final l1 = InterChipDecoder().decode(rawData);
+    if (l1 == null) {
+      throw ArgumentError('Invalid inter-chip packet: decode failed');
+    }
+
+    if (l1.cmd != InterChipCmds.ackOk) {
+      return DecodeResult<PlayHornAck>(status: l1.cmd, data: null);
+    }
+
+    final l3 = l1.payload; // AckOK 的 payload 为第三层载荷
+
+    // 播放喇叭第三层载荷长度必须为 0（无第三层负载）
+    if (l3.isNotEmpty) {
+      throw ArgumentError(
+        'Invalid L3 play horn ack payload length: expected 0, got ${l3.length}',
+      );
+    }
+
+    // 2) Layer3 解码为业务模型（无载荷，仅 Ack）
+    final resp = PlayHornAck.fromBytes(l3);
+    return DecodeResult<PlayHornAck>(status: l1.cmd, data: resp);
   }
 
   /// 编码：设置推杆速度请求（一次调用产出最终一层字节流）

@@ -82,3 +82,26 @@ Language switch: 中文版更新日志 → [CHANGELOG.md](CHANGELOG.md)
 - Maintenance release: clarifications for publishing workflow, no API changes.
 - Compatibility: fully compatible with 1.4.0; users can keep `^1.4.0`.
 - Quality: all tests pass (ControlBus/DFU/factory integration).
+
+## 1.6.0 — Feature + Fix (2025-12-08)
+
+### Feature: Control Bus — Play Horn
+
+- Layer 2: add `CbCmd.hornControlRequest (0x4F)`.
+- Layer 3: request payload `durationMs` in milliseconds (u16 BE).
+- Layer 1: response `AckOK (0x02)`, ack-only (no L3 payload).
+- Factory: `ControlBusFactory.encodePlayHornReq(...)` and `decodePlayHornAck(...)`.
+- Example: `example/control_bus/play_horn_factory_example.dart`.
+- Export: `lib/byte_message.dart` exports `play_horn.dart`.
+
+### Fix: DFU write chunk header endianness
+
+- File: `src/protocols/layer3/dfu/write_upgrade_chunk.dart`.
+- Change: encode DfuBlob header fields (PageId/BlobId/BlobSize/BlobStart) in big-endian (BE).
+- Context: previously LE, causing mismatch with integration tests expecting BE.
+
+### QA
+
+- Added integration tests (Control Bus) covering encode round-trip, ack-only decode, and negative cases.
+- Constants test updated: include `hornControlRequest (0x4F)` and unique values count set to 17.
+- All tests pass: `dart test -r expanded`.

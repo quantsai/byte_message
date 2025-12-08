@@ -52,6 +52,7 @@ export 'src/protocols/layer3/control_bus/set_joystick.dart';
 export 'src/protocols/layer3/control_bus/set_fold_state.dart';
 export 'src/protocols/layer3/control_bus/set_device_language.dart';
 export 'src/protocols/layer3/control_bus/set_mute_status.dart';
+export 'src/protocols/layer3/control_bus/play_horn.dart';
 
 // 导出第三层协议（DFU）
 export 'src/protocols/layer3/dfu/get_device_info.dart';

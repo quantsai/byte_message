@@ -15,6 +15,7 @@ void main() {
       expect(CbCmd.speedGearRequest.code, equals(0x3E));
       expect(CbCmd.speedControlRequest.code, equals(0x41));
       expect(CbCmd.pushRodControlRequest.code, equals(0x42));
+      expect(CbCmd.hornControlRequest.code, equals(0x4F));
       expect(CbCmd.operatingModeControlRequest.code, equals(0x4D));
       expect(CbCmd.speedGearControlRequest.code, equals(0x4E));
       expect(CbCmd.joystickControlRequest.code, equals(0x81));
@@ -27,7 +28,7 @@ void main() {
 
     test('CbCmd values are unique', () {
       final values = CbCmd.values.map((e) => e.code).toSet();
-      expect(values.length, equals(16));
+      expect(values.length, equals(17));
     });
   });
 
