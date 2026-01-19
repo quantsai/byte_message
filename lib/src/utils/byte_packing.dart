@@ -217,11 +217,9 @@ int u32FromBytes(List<int> bytes) {
 /// 返回：
 /// - [List<int>] 4 字节的大端序数组（[b0, b1, b2, b3]）。
 List<int> packF32BE(double value) {
-  final b0 = (value.toInt() >> 24) & 0xFF;
-  final b1 = (value.toInt() >> 16) & 0xFF;
-  final b2 = (value.toInt() >> 8) & 0xFF;
-  final b3 = value.toInt() & 0xFF;
-  return [b0, b1, b2, b3];
+  final b = ByteData(4);
+  b.setFloat32(0, value, Endian.big);
+  return [b.getUint8(0), b.getUint8(1), b.getUint8(2), b.getUint8(3)];
 }
 
 /// 把浮点数转换成 4 字节的小端序（LE）数组。
@@ -232,11 +230,9 @@ List<int> packF32BE(double value) {
 /// 返回：
 /// - [List<int>] 4 字节的小端序数组（[低, 次低, 次高, 高]）。
 List<int> packF32LE(double value) {
-  final b0 = value.toInt() & 0xFF;
-  final b1 = (value.toInt() >> 8) & 0xFF;
-  final b2 = (value.toInt() >> 16) & 0xFF;
-  final b3 = (value.toInt() >> 24) & 0xFF;
-  return [b0, b1, b2, b3];
+  final b = ByteData(4);
+  b.setFloat32(0, value, Endian.little);
+  return [b.getUint8(0), b.getUint8(1), b.getUint8(2), b.getUint8(3)];
 }
 
 /// 把浮点数转换成 2 字节的大端序（BE）数组。

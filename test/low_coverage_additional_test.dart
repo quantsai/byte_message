@@ -9,13 +9,14 @@ import 'package:byte_message/src/models/layer2/control_bus_cmd.dart';
 
 void main() {
   group('L3 SetSpeed (speed_control)', () {
-    test('SetSpeedReq.encode packs two f32 BE (int-based)', () {
+    test('SetSpeedReq.encode packs two f32 BE (IEEE 754)', () {
       final req = SetSpeedReq(linearVelocity: 2.75, angularVelocity: -1.5);
       final bytes = req.encode();
       expect(bytes.length, 8);
-      // 当前实现按 value.toInt 的 BE 方式打包
-      expect(bytes.sublist(0, 4), equals([0x00, 0x00, 0x00, 0x02]));
-      expect(bytes.sublist(4, 8), equals([0xFF, 0xFF, 0xFF, 0xFF & -1]));
+      // 2.75 -> 0x40300000 -> [64, 48, 0, 0]
+      expect(bytes.sublist(0, 4), equals([0x40, 0x30, 0x00, 0x00]));
+      // -1.5 -> 0xBFC00000 -> [191, 192, 0, 0]
+      expect(bytes.sublist(4, 8), equals([0xBF, 0xC0, 0x00, 0x00]));
     });
 
     test('SetSpeedAck.fromBytes throws for non-empty payload', () {
@@ -100,10 +101,17 @@ void main() {
       expect(packU32BE(0x7FFFFFFF), equals([0x7F, 0xFF, 0xFF, 0xFF]));
     });
 
-    test('packF16BE and packF32BE follow int-based packing', () {
-      expect(packF16BE(258.9), equals([0x01, 0x02]));
-      expect(packF32BE(1.5), equals([0x00, 0x00, 0x00, 0x01]));
-      expect(packF32BE(-2.0), equals([0xFF, 0xFF, 0xFF, 0xFE]));
+    test('packF16BE and packF32BE check', () {
+      expect(
+          packF16BE(258.9),
+          equals([
+            0x01,
+            0x02
+          ])); // packF16BE still uses int-based logic if not updated
+      // 1.5 -> 0x3FC00000 -> [63, 192, 0, 0]
+      expect(packF32BE(1.5), equals([0x3F, 0xC0, 0x00, 0x00]));
+      // -2.0 -> 0xC0000000 -> [192, 0, 0, 0]
+      expect(packF32BE(-2.0), equals([0xC0, 0x00, 0x00, 0x00]));
     });
 
     test('padDecimalLeft formats fixed width string', () {

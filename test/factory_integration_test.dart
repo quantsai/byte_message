@@ -417,6 +417,108 @@ void main() {
           throwsArgumentError);
     });
 
+    /// 负例：解码非法的一层数据应抛出 ArgumentError
+    test('decode with invalid L1 data throws', () {
+      final invalidRaw = [0x00]; // Too short for L1
+      final factory = ControlBusFactory();
+      expect(
+          () => factory.decodeConnectionRes(invalidRaw), throwsArgumentError);
+      expect(
+          () => factory.decodeSetFoldStateAck(invalidRaw), throwsArgumentError);
+      expect(() => factory.decodeBatteryStatusRes(invalidRaw),
+          throwsArgumentError);
+      expect(
+          () => factory.decodeDeviceStatusRes(invalidRaw), throwsArgumentError);
+      expect(() => factory.decodeOperatingModeRes(invalidRaw),
+          throwsArgumentError);
+      expect(() => factory.decodeElectricalMetricsRes(invalidRaw),
+          throwsArgumentError);
+      expect(
+          () => factory.decodeMuteStatusRes(invalidRaw), throwsArgumentError);
+      expect(
+          () => factory.decodeSpeedControlAck(invalidRaw), throwsArgumentError);
+      expect(() => factory.decodeSetOperatingModeAck(invalidRaw),
+          throwsArgumentError);
+      expect(
+          () => factory.decodeSetSpeedGearAck(invalidRaw), throwsArgumentError);
+      expect(() => factory.decodePlayHornAck(invalidRaw), throwsArgumentError);
+      expect(
+          () => factory.decodeSetJoystickAck(invalidRaw), throwsArgumentError);
+      expect(() => factory.decodeSetPushRodSpeedAck(invalidRaw),
+          throwsArgumentError);
+    });
+
+    /// 负例：连接应答载荷长度不为 28 时应抛出 ArgumentError
+    test('decode connection ack with invalid length throws', () {
+      final ack = InterChipPacket(
+          cmd: InterChipCmds.ackOk, payload: List<int>.filled(27, 0x00));
+      final raw = InterChipEncoder().encode(ack);
+      expect(() => ControlBusFactory().decodeConnectionRes(raw),
+          throwsArgumentError);
+    });
+
+    /// 负例：电量状态应答载荷长度不为 2 时应抛出 ArgumentError
+    test('decode battery status ack with invalid length throws', () {
+      final ack = InterChipPacket(
+          cmd: InterChipCmds.ackOk, payload: List<int>.filled(1, 0x00));
+      final raw = InterChipEncoder().encode(ack);
+      expect(() => ControlBusFactory().decodeBatteryStatusRes(raw),
+          throwsArgumentError);
+    });
+
+    /// 负例：静音状态应答载荷长度不为 1 时应抛出 ArgumentError
+    test('decode mute status ack with invalid length throws', () {
+      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const []);
+      final raw = InterChipEncoder().encode(ack);
+      expect(() => ControlBusFactory().decodeMuteStatusRes(raw),
+          throwsArgumentError);
+    });
+
+    /// 负例：SetOperatingModeAck 带有非空载荷时应抛出 ArgumentError
+    test('decode set operating mode ack with non-empty payload throws', () {
+      final ack =
+          InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x00]);
+      final raw = InterChipEncoder().encode(ack);
+      expect(() => ControlBusFactory().decodeSetOperatingModeAck(raw),
+          throwsArgumentError);
+    });
+
+    /// 负例：SetSpeedGearAck 带有非空载荷时应抛出 ArgumentError
+    test('decode set speed gear ack with non-empty payload throws', () {
+      final ack =
+          InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x00]);
+      final raw = InterChipEncoder().encode(ack);
+      expect(() => ControlBusFactory().decodeSetSpeedGearAck(raw),
+          throwsArgumentError);
+    });
+
+    /// 负例：SetJoystickAck 带有非空载荷时应抛出 ArgumentError
+    test('decode set joystick ack with non-empty payload throws', () {
+      final ack =
+          InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x00]);
+      final raw = InterChipEncoder().encode(ack);
+      expect(() => ControlBusFactory().decodeSetJoystickAck(raw),
+          throwsArgumentError);
+    });
+
+    /// 负例：SetPushRodSpeedAck 带有非空载荷时应抛出 ArgumentError
+    test('decode set pushrod speed ack with non-empty payload throws', () {
+      final ack =
+          InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x00]);
+      final raw = InterChipEncoder().encode(ack);
+      expect(() => ControlBusFactory().decodeSetPushRodSpeedAck(raw),
+          throwsArgumentError);
+    });
+
+    /// 负例：SetFoldStateAck 带有非空载荷时应抛出 ArgumentError
+    test('decode set fold state ack with non-empty payload throws', () {
+      final ack =
+          InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x00]);
+      final raw = InterChipEncoder().encode(ack);
+      expect(() => ControlBusFactory().decodeSetFoldStateAck(raw),
+          throwsArgumentError);
+    });
+
     /// 功能描述：验证 ControlBusFactory.encodeMuteStatusReq 生成的一层字节流，
     /// 能被第一层与第二层解码为预期的 Cmd 与 CbCmd，并包含第三层请求负载（空）。
     test('encode mute status request -> decode L1/L2/L3 content', () {
@@ -503,6 +605,105 @@ void main() {
       expect(l2.cbPayload, equals([MuteState.on.value]));
     });
 
+    /// 功能描述：验证 ControlBusFactory.encodeSetOperatingModeReq 的编码，并通过 L1/L2 解码检查 CbCmd 与第三层负载
+    test('encode set operating mode request -> decode L1/L2/L3 content', () {
+      final bytes = ControlBusFactory()
+          .encodeSetOperatingModeReq(mode: OperatingMode.selfBalance);
+
+      final l1 = InterChipDecoder().decode(bytes);
+      expect(l1, isNotNull);
+      expect(l1!.cmd, InterChipCmds.normal);
+
+      final l2 = ControlBusDecoder().decode(l1.payload);
+      expect(l2, isNotNull);
+      expect(l2!.cbCmd, CbCmd.operatingModeControlRequest);
+      expect(l2.cbPayload, equals([OperatingMode.selfBalance.value]));
+    });
+
+    /// 功能描述：验证 ControlBusFactory.encodeSpeedControlReq 的编码，并通过 L1/L2 解码检查 CbCmd 与第三层负载
+    test('encode speed control request -> decode L1/L2/L3 content', () {
+      // 1.5 m/s, 0.5 r/s -> float32 BE
+      // 1.5 = 0x3FC00000
+      // 0.5 = 0x3F000000
+      final bytes =
+          ControlBusFactory().encodeSpeedControlReq(linear: 1.5, angular: 0.5);
+
+      final l1 = InterChipDecoder().decode(bytes);
+      expect(l1, isNotNull);
+      expect(l1!.cmd, InterChipCmds.normal);
+
+      final l2 = ControlBusDecoder().decode(l1.payload);
+      expect(l2, isNotNull);
+      expect(l2!.cbCmd, CbCmd.speedControlRequest);
+      expect(l2.cbPayload,
+          equals([0x3F, 0xC0, 0x00, 0x00, 0x3F, 0x00, 0x00, 0x00]));
+    });
+
+    /// 功能描述：验证 ControlBusFactory.encodeSetSpeedGearReq 的编码，并通过 L1/L2 解码检查 CbCmd 与第三层负载
+    test('encode set speed gear request -> decode L1/L2/L3 content', () {
+      final bytes =
+          ControlBusFactory().encodeSetSpeedGearReq(gear: SpeedGear.gear2);
+
+      final l1 = InterChipDecoder().decode(bytes);
+      expect(l1, isNotNull);
+      expect(l1!.cmd, InterChipCmds.normal);
+
+      final l2 = ControlBusDecoder().decode(l1.payload);
+      expect(l2, isNotNull);
+      expect(l2!.cbCmd, CbCmd.speedGearControlRequest);
+      expect(l2.cbPayload, equals([SpeedGear.gear2.value]));
+    });
+
+    /// 功能描述：验证 ControlBusFactory.encodeSetPushRodSpeedReq 的编码，并通过 L1/L2 解码检查 CbCmd 与第三层负载
+    test('encode set pushrod speed request -> decode L1/L2/L3 content', () {
+      // A=1.0, B=2.0, C=3.0, D=4.0 -> float32 BE
+      // 1.0 = 0x3F800000
+      // 2.0 = 0x40000000
+      // 3.0 = 0x40400000
+      // 4.0 = 0x40800000
+      final bytes = ControlBusFactory().encodeSetPushRodSpeedReq(
+        a: 1.0,
+        b: 2.0,
+        c: 3.0,
+        d: 4.0,
+      );
+
+      final l1 = InterChipDecoder().decode(bytes);
+      expect(l1, isNotNull);
+      expect(l1!.cmd, InterChipCmds.normal);
+
+      final l2 = ControlBusDecoder().decode(l1.payload);
+      expect(l2, isNotNull);
+      expect(l2!.cbCmd, CbCmd.pushRodControlRequest);
+
+      final expectedPayload = [
+        0x3F, 0x80, 0x00, 0x00, // A
+        0x40, 0x00, 0x00, 0x00, // B
+        0x40, 0x40, 0x00, 0x00, // C
+        0x40, 0x80, 0x00, 0x00, // D
+      ];
+      expect(l2.cbPayload, equals(expectedPayload));
+    });
+
+    /// 功能描述：验证 ControlBusFactory.encodeSetJoystickReq 的编码，并通过 L1/L2 解码检查 CbCmd 与第三层负载
+    test('encode set joystick request -> decode L1/L2/L3 content', () {
+      // x=100, y=-100, z=50 -> s16 BE
+      // 100 = 0x0064
+      // -100 = 0xFF9C
+      // 50 = 0x0032
+      final bytes =
+          ControlBusFactory().encodeSetJoystickReq(x: 100, y: -100, z: 50);
+
+      final l1 = InterChipDecoder().decode(bytes);
+      expect(l1, isNotNull);
+      expect(l1!.cmd, InterChipCmds.normal);
+
+      final l2 = ControlBusDecoder().decode(l1.payload);
+      expect(l2, isNotNull);
+      expect(l2!.cbCmd, CbCmd.joystickControlRequest);
+      expect(l2.cbPayload, equals([0x00, 0x64, 0xFF, 0x9C, 0x00, 0x32]));
+    });
+
     /// 功能描述：构造空负载 AckOK，验证 decodeSetMuteStatusAck 能正确解析为 Ack。
     test('decode set mute status ack -> ack-only', () {
       final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const []);
@@ -520,6 +721,114 @@ void main() {
       final raw = InterChipEncoder().encode(ack);
       expect(() => ControlBusFactory().decodeSetMuteStatusAck(raw),
           throwsArgumentError);
+    });
+
+    group('Non-Ack Responses', () {
+      final nonAck = InterChipPacket(cmd: InterChipCmds.ackError, payload: []);
+      final raw = InterChipEncoder().encode(nonAck);
+      final factory = ControlBusFactory();
+
+      test('decodeConnectionRes returns status for non-ack', () {
+        final res = factory.decodeConnectionRes(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodeSetFoldStateAck returns status for non-ack', () {
+        final res = factory.decodeSetFoldStateAck(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodeBatteryStatusRes returns status for non-ack', () {
+        final res = factory.decodeBatteryStatusRes(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodeElectricalMetricsRes returns status for non-ack', () {
+        final res = factory.decodeElectricalMetricsRes(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodeDeviceStatusRes returns status for non-ack', () {
+        final res = factory.decodeDeviceStatusRes(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodeOperatingModeRes returns status for non-ack', () {
+        final res = factory.decodeOperatingModeRes(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodeSpeedGearRes returns status for non-ack', () {
+        final res = factory.decodeSpeedGearRes(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodeDeviceLanguageRes returns status for non-ack', () {
+        final res = factory.decodeDeviceLanguageRes(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodeMuteStatusRes returns status for non-ack', () {
+        final res = factory.decodeMuteStatusRes(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodeSpeedControlAck returns status for non-ack', () {
+        final res = factory.decodeSpeedControlAck(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodeSetOperatingModeAck returns status for non-ack', () {
+        final res = factory.decodeSetOperatingModeAck(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodeSetSpeedGearAck returns status for non-ack', () {
+        final res = factory.decodeSetSpeedGearAck(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodeSetDeviceLanguageAck returns status for non-ack', () {
+        final res = factory.decodeSetDeviceLanguageAck(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodeSetMuteStatusAck returns status for non-ack', () {
+        final res = factory.decodeSetMuteStatusAck(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodePlayHornAck returns status for non-ack', () {
+        final res = factory.decodePlayHornAck(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodeSetJoystickAck returns status for non-ack', () {
+        final res = factory.decodeSetJoystickAck(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
+
+      test('decodeSetPushRodSpeedAck returns status for non-ack', () {
+        final res = factory.decodeSetPushRodSpeedAck(raw);
+        expect(res.status, InterChipCmds.ackError);
+        expect(res.data, isNull);
+      });
     });
   });
 

@@ -48,7 +48,7 @@ void main() {
   });
 
   group('L3 SetPushRodSpeed', () {
-    test('encode 4 x f32 BE (int-based packing) to 16 bytes', () {
+    test('encode 4 x f32 BE (IEEE 754) to 16 bytes', () {
       final req = SetPushRodSpeedReq(
         speedA: 1.5,
         speedB: -2.25,
@@ -57,15 +57,14 @@ void main() {
       );
       final bytes = req.encode();
       expect(bytes.length, equals(16));
-      // 当前实现采用整数部分打包（参见 byte_packing.packF32BE），验证每段为 value.toInt 的 BE 表示。
-      // A=1 -> 0x00 0x00 0x00 0x01
-      expect(bytes.sublist(0, 4), equals([0x00, 0x00, 0x00, 0x01]));
-      // B=-2 -> 0xFF 0xFF 0xFF 0xFE
-      expect(bytes.sublist(4, 8), equals([0xFF, 0xFF, 0xFF, 0xFE]));
-      // C=0 -> 0x00 0x00 0x00 0x00
+      // A=1.5 -> 0x3F C0 00 00
+      expect(bytes.sublist(0, 4), equals([0x3F, 0xC0, 0x00, 0x00]));
+      // B=-2.25 -> 0xC0 10 00 00
+      expect(bytes.sublist(4, 8), equals([0xC0, 0x10, 0x00, 0x00]));
+      // C=0.0 -> 0x00 0x00 0x00 0x00
       expect(bytes.sublist(8, 12), equals([0x00, 0x00, 0x00, 0x00]));
-      // D=100 -> 0x00 0x00 0x00 0x64
-      expect(bytes.sublist(12, 16), equals([0x00, 0x00, 0x00, 0x64]));
+      // D=100.0 -> 0x42 C8 00 00
+      expect(bytes.sublist(12, 16), equals([0x42, 0xC8, 0x00, 0x00]));
     });
 
     test('SetPushRodSpeedAck.fromBytes throws for non-empty payload', () {
