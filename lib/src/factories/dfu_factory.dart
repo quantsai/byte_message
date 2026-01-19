@@ -19,6 +19,8 @@ import '../protocols/layer3/dfu/get_device_info.dart';
 import '../protocols/layer3/dfu/start_upgrade.dart';
 import '../protocols/layer3/dfu/finish_upgrade.dart';
 import '../protocols/layer3/dfu/write_upgrade_chunk.dart';
+import '../protocols/layer3/dfu/dfu_blob.dart';
+import '../protocols/layer3/dfu/write_upgrade_bulk.dart';
 
 /// DFU 三层组合工厂
 class DfuFactory {
@@ -255,7 +257,8 @@ class DfuFactory {
   /// 返回：
   /// - 当一层 Cmd 为 AckOK（0x02）且第三层载荷长度为 2 时，返回解析后的 WriteUpgradeChunkRes；
   /// - 否则返回状态并置 data 为 null。
-  DecodeResult<WriteUpgradeChunkRes> decodeWriteUpgradeChunkRes(List<int> rawData) {
+  DecodeResult<WriteUpgradeChunkRes> decodeWriteUpgradeChunkRes(
+      List<int> rawData) {
     // 1) Layer1 解码
     final l1 = InterChipDecoder().decode(rawData);
     if (l1 == null) {
@@ -278,5 +281,75 @@ class DfuFactory {
     // 2) Layer3 解码为业务模型
     final resp = WriteUpgradeChunkRes.fromBytes(l3);
     return DecodeResult<WriteUpgradeChunkRes>(status: l1.cmd, data: resp);
+  }
+
+  /// 编码：批量写升级包请求（一次调用产出最终一层字节流）
+  ///
+  /// 功能描述：
+  /// - 将第三层“批量写升级包请求”的负载（DfuBlobList）编码为二层 DfuMessage（DfuCmd=0x07, DfuVersion=0x01），
+  ///   再包装为一层 InterChipPacket（Cmd=0x20 DFU），最终输出完整字节序列。
+  ///
+  /// 参数说明：
+  /// - [blobList] 必填：升级数据片段列表 DfuBlobList（包含 BlobCnt 和 blobs）
+  /// - [flag] 可选：指定一层 Flag（u8）。若为 null，则编码器根据负载自动选择短帧/长帧并默认启用校验和。
+  /// - [dfuPkgVersion] 可选：DFU 协议版本（u8），默认 0x01。
+  ///
+  /// 返回值：
+  /// - List<int>：完整的一层字节流，可直接发送。
+  List<int> encodeWriteUpgradeBulkReq({
+    required DfuBlobList blobList,
+    int? flag,
+    int dfuPkgVersion = 0x01,
+  }) {
+    // 1) Layer3：创建请求对象并编码第三层负载（DfuBlobList）
+    final l3Payload = WriteUpgradeBulkReq(blobList: blobList).encode();
+
+    // 2) Layer2 封装：DfuCmd=0x07（批量写升级包），DfuVersion=dfuPkgVersion，DfuPayload=第三层负载
+    final l2Message = DfuMessage(
+      dfuCmd: DfuCmd.writeUpgradeBulk,
+      dfuVersion: dfuPkgVersion,
+      dfuPayload: l3Payload,
+    );
+    final l2 = DfuEncoder().encode(l2Message);
+
+    // 3) Layer1 包装：Cmd=0x20（DFU），Payload=二层负载
+    final packet = InterChipPacket(
+      flag: flag,
+      cmd: InterChipCmds.dfu,
+      payload: l2,
+    );
+
+    return InterChipEncoder().encode(packet);
+  }
+
+  /// 解码：批量写升级包应答（一次调用从一层原始字节流还原第三层模型）
+  ///
+  /// 返回：
+  /// - 当一层 Cmd 为 AckOK（0x02）且第三层载荷长度为 2 时，返回解析后的 WriteUpgradeBulkRes；
+  /// - 否则返回状态并置 data 为 null。
+  DecodeResult<WriteUpgradeBulkRes> decodeWriteUpgradeBulkRes(
+      List<int> rawData) {
+    // 1) Layer1 解码
+    final l1 = InterChipDecoder().decode(rawData);
+    if (l1 == null) {
+      throw ArgumentError('Invalid inter-chip packet: decode failed');
+    }
+
+    if (l1.cmd != InterChipCmds.ackOk) {
+      return DecodeResult<WriteUpgradeBulkRes>(status: l1.cmd, data: null);
+    }
+
+    final l3 = l1.payload; // AckOK 的 payload 为第三层载荷
+
+    // 批量写升级包第三层载荷长度必须为 2（见文档：u8 + u8）
+    if (l3.length < 2) {
+      throw ArgumentError(
+        'Invalid L3 DFU write upgrade bulk payload length: expected 2, got ${l3.length}',
+      );
+    }
+
+    // 2) Layer3 解码为业务模型
+    final resp = WriteUpgradeBulkRes.fromBytes(l3);
+    return DecodeResult<WriteUpgradeBulkRes>(status: l1.cmd, data: resp);
   }
 }

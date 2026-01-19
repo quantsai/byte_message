@@ -1,6 +1,7 @@
 import 'package:test/test.dart';
 import 'package:byte_message/byte_message.dart';
 import 'package:byte_message/src/utils/byte_packing.dart';
+import 'package:byte_message/src/protocols/layer3/dfu/dfu_blob.dart';
 
 void main() {
   group('Layer3 DFU: Start/Finish Upgrade', () {
@@ -123,6 +124,45 @@ void main() {
       expect(() => GetDeviceInfoRes.fromBytes(List<int>.filled(32, 0x01)),
           throwsA(isA<ArgumentError>()));
       expect(() => GetDeviceInfoRes.fromBytes(List<int>.filled(34, 0x01)),
+          throwsA(isA<ArgumentError>()));
+    });
+  });
+
+  group('Layer3 DFU: WriteUpgradeBulk', () {
+    test('DfuBlobList.encode writes blobCnt and multiple blobs', () {
+      final blob1 = DfuBlob(
+        pageId: 0x0102,
+        blobId: 0x0304,
+        blobStart: 0x0008,
+        blobData: const [0xAA],
+      );
+      final blob2 = DfuBlob(
+        pageId: 0x0203,
+        blobId: 0x0405,
+        blobStart: 0x0009,
+        blobData: const [0xBB],
+      );
+
+      final blobList = DfuBlobList(blobs: [blob1, blob2]);
+      final encoded = blobList.encode();
+
+      expect(encoded[0], equals(2)); // BlobCnt
+      // Blob 1 (len: 2+2+2+2+1 = 9)
+      expect(encoded.sublist(1, 10), equals(blob1.encode()));
+      // Blob 2
+      expect(encoded.sublist(10), equals(blob2.encode()));
+    });
+
+    test('WriteUpgradeBulkRes.fromBytes parses version and status enum', () {
+      final res = WriteUpgradeBulkRes.fromBytes(const [0x01, 0x00]);
+      expect(res.dfuPkgVersion, equals(0x01));
+      expect(res.result, WriteUpgradeBulkResStatus.ok);
+    });
+
+    test('WriteUpgradeBulkRes.fromBytes throws on invalid payload length', () {
+      expect(() => WriteUpgradeBulkRes.fromBytes(const [0x01]),
+          throwsA(isA<ArgumentError>()));
+      expect(() => WriteUpgradeBulkRes.fromBytes(const [0x01, 0x00, 0xFF]),
           throwsA(isA<ArgumentError>()));
     });
   });

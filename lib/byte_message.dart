@@ -58,7 +58,9 @@ export 'src/protocols/layer3/control_bus/play_horn.dart';
 export 'src/protocols/layer3/dfu/get_device_info.dart';
 export 'src/protocols/layer3/dfu/start_upgrade.dart';
 export 'src/protocols/layer3/dfu/finish_upgrade.dart';
+export 'src/protocols/layer3/dfu/dfu_blob.dart';
 export 'src/protocols/layer3/dfu/write_upgrade_chunk.dart';
+export 'src/protocols/layer3/dfu/write_upgrade_bulk.dart';
 
 // 导出工厂类（按第二层协议分文件组织）
 export 'src/factories/control_bus_factory.dart';

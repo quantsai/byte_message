@@ -15,7 +15,7 @@ import 'package:byte_message/src/protocols/layer3/control_bus/get_speed_gear.dar
 import 'package:byte_message/src/protocols/layer3/control_bus/get_device_language.dart';
 import 'package:byte_message/src/protocols/layer3/control_bus/get_mute_status.dart';
 import 'package:byte_message/src/protocols/layer3/control_bus/set_fold_state.dart';
-import 'package:byte_message/src/protocols/layer3/dfu/write_upgrade_chunk.dart';
+import 'package:byte_message/src/protocols/layer3/dfu/dfu_blob.dart';
 
 void main() {
   group('ControlBusFactory integration', () {
@@ -295,7 +295,8 @@ void main() {
 
     /// 功能描述：验证 ControlBusFactory.encodeSetFoldStateReq 的编码，并通过 L1/L2 解码检查 CbCmd 与第三层负载
     test('encode set fold state request -> decode L1/L2/L3 content', () {
-      final bytes = ControlBusFactory().encodeSetFoldStateReq(state: FoldState.fold);
+      final bytes =
+          ControlBusFactory().encodeSetFoldStateReq(state: FoldState.fold);
 
       final l1 = InterChipDecoder().decode(bytes);
       expect(l1, isNotNull);
@@ -319,51 +320,65 @@ void main() {
 
     /// 负例：速度档位应答载荷长度不为 1 时应抛出 ArgumentError
     test('decode speed gear ack with invalid length throws', () {
-      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x00, 0x01]);
+      final ack = InterChipPacket(
+          cmd: InterChipCmds.ackOk, payload: const [0x00, 0x01]);
       final raw = InterChipEncoder().encode(ack);
-      expect(() => ControlBusFactory().decodeSpeedGearRes(raw), throwsArgumentError);
+      expect(() => ControlBusFactory().decodeSpeedGearRes(raw),
+          throwsArgumentError);
     });
 
     /// 负例：设备状态应答载荷长度不为 5 时应抛出 ArgumentError
     test('decode device status ack with invalid length throws', () {
-      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0xFF, 0x00, 0x00, 0x00]);
+      final ack = InterChipPacket(
+          cmd: InterChipCmds.ackOk, payload: const [0xFF, 0x00, 0x00, 0x00]);
       final raw = InterChipEncoder().encode(ack);
-      expect(() => ControlBusFactory().decodeDeviceStatusRes(raw), throwsArgumentError);
+      expect(() => ControlBusFactory().decodeDeviceStatusRes(raw),
+          throwsArgumentError);
     });
 
     /// 负例：Ack-only 应答带有非空第三层负载时应抛出 ArgumentError（以 SetSpeed 为例）
     test('decode set speed ack with non-empty payload throws', () {
-      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x00]);
+      final ack =
+          InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x00]);
       final raw = InterChipEncoder().encode(ack);
-      expect(() => ControlBusFactory().decodeSpeedControlAck(raw), throwsArgumentError);
+      expect(() => ControlBusFactory().decodeSpeedControlAck(raw),
+          throwsArgumentError);
     });
 
     /// 负例：播放喇叭 Ack-only 应答带有非空第三层负载时应抛出 ArgumentError
     test('decode play horn ack with non-empty payload throws', () {
-      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x00]);
+      final ack =
+          InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x00]);
       final raw = InterChipEncoder().encode(ack);
-      expect(() => ControlBusFactory().decodePlayHornAck(raw), throwsArgumentError);
+      expect(() => ControlBusFactory().decodePlayHornAck(raw),
+          throwsArgumentError);
     });
 
     /// 负例：功能模式应答载荷长度不为 1 应抛出 ArgumentError
     test('decode operating mode ack with invalid length throws', () {
-      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x00, 0x01]);
+      final ack = InterChipPacket(
+          cmd: InterChipCmds.ackOk, payload: const [0x00, 0x01]);
       final raw = InterChipEncoder().encode(ack);
-      expect(() => ControlBusFactory().decodeOperatingModeRes(raw), throwsArgumentError);
+      expect(() => ControlBusFactory().decodeOperatingModeRes(raw),
+          throwsArgumentError);
     });
 
     /// 负例：功能模式应答包含非法枚举值（0xFF）应抛出 ArgumentError
     test('decode operating mode ack with invalid mode value throws', () {
-      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0xFF]);
+      final ack =
+          InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0xFF]);
       final raw = InterChipEncoder().encode(ack);
-      expect(() => ControlBusFactory().decodeOperatingModeRes(raw), throwsArgumentError);
+      expect(() => ControlBusFactory().decodeOperatingModeRes(raw),
+          throwsArgumentError);
     });
 
     /// 负例：电气参数应答载荷长度不为 8 应抛出 ArgumentError
     test('decode electrical metrics ack with invalid length throws', () {
-      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: List<int>.filled(7, 0x00));
+      final ack = InterChipPacket(
+          cmd: InterChipCmds.ackOk, payload: List<int>.filled(7, 0x00));
       final raw = InterChipEncoder().encode(ack);
-      expect(() => ControlBusFactory().decodeElectricalMetricsRes(raw), throwsArgumentError);
+      expect(() => ControlBusFactory().decodeElectricalMetricsRes(raw),
+          throwsArgumentError);
     });
 
     /// 功能描述：验证 ControlBusFactory.encodeDeviceLanguageReq 生成的一层字节流，
@@ -398,7 +413,8 @@ void main() {
     test('decode device language ack with invalid length throws', () {
       final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const []);
       final raw = InterChipEncoder().encode(ack);
-      expect(() => ControlBusFactory().decodeDeviceLanguageRes(raw), throwsArgumentError);
+      expect(() => ControlBusFactory().decodeDeviceLanguageRes(raw),
+          throwsArgumentError);
     });
 
     /// 功能描述：验证 ControlBusFactory.encodeMuteStatusReq 生成的一层字节流，
@@ -431,14 +447,17 @@ void main() {
 
     /// 负例：静音状态应答载荷长度不为 1 时应抛出 ArgumentError
     test('decode mute status ack with invalid length throws', () {
-      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x00, 0x01]);
+      final ack = InterChipPacket(
+          cmd: InterChipCmds.ackOk, payload: const [0x00, 0x01]);
       final raw = InterChipEncoder().encode(ack);
-      expect(() => ControlBusFactory().decodeMuteStatusRes(raw), throwsArgumentError);
+      expect(() => ControlBusFactory().decodeMuteStatusRes(raw),
+          throwsArgumentError);
     });
 
     /// 功能描述：验证 ControlBusFactory.encodeSetDeviceLanguageReq 的编码，并通过 L1/L2 解码检查 CbCmd 与第三层负载
     test('encode set device language request -> decode L1/L2/L3 content', () {
-      final bytes = ControlBusFactory().encodeSetDeviceLanguageReq(language: DeviceLanguage.english);
+      final bytes = ControlBusFactory()
+          .encodeSetDeviceLanguageReq(language: DeviceLanguage.english);
 
       final l1 = InterChipDecoder().decode(bytes);
       expect(l1, isNotNull);
@@ -462,14 +481,17 @@ void main() {
 
     /// 负例：设置设备语言 Ack-only 应答带有非空第三层负载时应抛出 ArgumentError
     test('decode set device language ack with non-empty payload throws', () {
-      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x01]);
+      final ack =
+          InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x01]);
       final raw = InterChipEncoder().encode(ack);
-      expect(() => ControlBusFactory().decodeSetDeviceLanguageAck(raw), throwsArgumentError);
+      expect(() => ControlBusFactory().decodeSetDeviceLanguageAck(raw),
+          throwsArgumentError);
     });
 
     /// 功能描述：验证 ControlBusFactory.encodeSetMuteStatusReq 的编码，并通过 L1/L2 解码检查 CbCmd 与第三层负载
     test('encode set mute status request -> decode L1/L2/L3 content', () {
-      final bytes = ControlBusFactory().encodeSetMuteStatusReq(state: MuteState.on);
+      final bytes =
+          ControlBusFactory().encodeSetMuteStatusReq(state: MuteState.on);
 
       final l1 = InterChipDecoder().decode(bytes);
       expect(l1, isNotNull);
@@ -493,9 +515,11 @@ void main() {
 
     /// 负例：设置静音状态 Ack-only 应答带有非空第三层负载时应抛出 ArgumentError
     test('decode set mute status ack with non-empty payload throws', () {
-      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x01]);
+      final ack =
+          InterChipPacket(cmd: InterChipCmds.ackOk, payload: const [0x01]);
       final raw = InterChipEncoder().encode(ack);
-      expect(() => ControlBusFactory().decodeSetMuteStatusAck(raw), throwsArgumentError);
+      expect(() => ControlBusFactory().decodeSetMuteStatusAck(raw),
+          throwsArgumentError);
     });
   });
 
@@ -548,7 +572,8 @@ void main() {
     /// 返回值/用途：验证 decodeStartUpgradeRes 的应答解析逻辑。
     test('decode start upgrade ack -> success', () {
       // 第三层载荷：pkgVersion=0x01，opResult=0x00
-      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: [0x01, 0x00]);
+      final ack =
+          InterChipPacket(cmd: InterChipCmds.ackOk, payload: [0x01, 0x00]);
       final raw = InterChipEncoder().encode(ack);
 
       final res = DfuFactory().decodeStartUpgradeRes(raw);
@@ -563,7 +588,8 @@ void main() {
     /// 参数：payload=[0x01, 0x00]。
     /// 返回值/用途：验证 decodeFinishUpgradeRes 的应答解析逻辑。
     test('decode finish upgrade ack -> success', () {
-      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: [0x01, 0x00]);
+      final ack =
+          InterChipPacket(cmd: InterChipCmds.ackOk, payload: [0x01, 0x00]);
       final raw = InterChipEncoder().encode(ack);
 
       final res = DfuFactory().decodeFinishUpgradeRes(raw);
@@ -577,7 +603,8 @@ void main() {
     /// 能被第一层与第二层解码为预期的 Cmd 与 DfuCmd，并包含第三层负载（DfuBlob 头 + 数据）。
     /// 参数：构造 pageId=1, blobId=2, blobStart=3, blobData=[0xAA, 0xBB, 0xCC]。
     /// 返回值/用途：确保 DFU 写块请求的编码与三层字段顺序正确（大端序）。
-    test('encode write upgrade chunk request -> decode and validate header', () {
+    test('encode write upgrade chunk request -> decode and validate header',
+        () {
       final blob = DfuBlob(
         pageId: 1,
         blobId: 2,
@@ -609,7 +636,8 @@ void main() {
     /// 参数：payload=[0x01, 0x00]。
     /// 返回值/用途：验证 decodeWriteUpgradeChunkRes 的应答解析逻辑。
     test('decode write upgrade chunk ack -> success', () {
-      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: [0x01, 0x00]);
+      final ack =
+          InterChipPacket(cmd: InterChipCmds.ackOk, payload: [0x01, 0x00]);
       final raw = InterChipEncoder().encode(ack);
 
       final res = DfuFactory().decodeWriteUpgradeChunkRes(raw);
@@ -663,20 +691,24 @@ void main() {
       expect(res.data!.venderInfo, equals(const [0x00, 0x00, 0x00, 0x06]));
       expect(res.data!.hardwareVersion, equals(const [0x00, 0x07]));
       expect(res.data!.dfuDeviceFlag, equals(const [0x00, 0x00, 0x00, 0x08]));
-      expect(res.data!.dfuDevicePowerVolt, equals(const [0x00, 0x00, 0x12, 0x34]));
+      expect(
+          res.data!.dfuDevicePowerVolt, equals(const [0x00, 0x00, 0x12, 0x34]));
     });
 
     /// 负例：获取设备信息应答载荷长度不足 33 时应抛出 ArgumentError
     test('decode get device info ack with invalid length throws', () {
-      final ack = InterChipPacket(cmd: InterChipCmds.ackOk, payload: List<int>.filled(32, 0x01));
+      final ack = InterChipPacket(
+          cmd: InterChipCmds.ackOk, payload: List<int>.filled(32, 0x01));
       final raw = InterChipEncoder().encode(ack);
-      expect(() => DfuFactory().decodeGetDeviceInfoRes(raw), throwsArgumentError);
+      expect(
+          () => DfuFactory().decodeGetDeviceInfoRes(raw), throwsArgumentError);
     });
 
     /// 边界：若一层 Cmd 非 AckOK，应返回对应状态且 data 为 null
     test('decode get device info with non-AckOK returns status-only', () {
       // 构造 DFU 普通报文（非 AckOK），负载内容对该场景无意义
-      final packet = InterChipPacket(cmd: InterChipCmds.dfu, payload: const [0x00]);
+      final packet =
+          InterChipPacket(cmd: InterChipCmds.dfu, payload: const [0x00]);
       final raw = InterChipEncoder().encode(packet);
 
       final res = DfuFactory().decodeGetDeviceInfoRes(raw);
