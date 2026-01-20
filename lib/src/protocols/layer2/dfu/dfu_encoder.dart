@@ -20,6 +20,10 @@ class DfuEncoder implements Layer2PayloadEncoder<DfuMessage> {
   /// - List<int>：仅包含二层内容 [dfuCmd, dfuVersion] + dfuPayload，不含任何一层字段
   @override
   List<int> encode(DfuMessage message) {
-    return <int>[message.dfuCmd.code, message.dfuVersion, ...message.dfuPayload];
+    return <int>[
+      message.dfuCmd.code,
+      message.dfuVersion,
+      ...message.dfuPayload
+    ];
   }
 }

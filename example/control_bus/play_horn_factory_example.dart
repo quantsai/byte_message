@@ -27,4 +27,3 @@ void main() {
   print('Decode.status: ${res.status}');
   print('Decode.data is Ack? ${res.data != null}');
 }
-

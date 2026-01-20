@@ -25,9 +25,12 @@ void main() {
     });
 
     test('encode throws RangeError for out-of-range axis', () {
-      expect(() => SetJoystickReq(x: -101, y: 0, z: 0).encode(), throwsRangeError);
-      expect(() => SetJoystickReq(x: 0, y: 101, z: 0).encode(), throwsRangeError);
-      expect(() => SetJoystickReq(x: 0, y: 0, z: -101).encode(), throwsRangeError);
+      expect(
+          () => SetJoystickReq(x: -101, y: 0, z: 0).encode(), throwsRangeError);
+      expect(
+          () => SetJoystickReq(x: 0, y: 101, z: 0).encode(), throwsRangeError);
+      expect(
+          () => SetJoystickReq(x: 0, y: 0, z: -101).encode(), throwsRangeError);
     });
   });
 
@@ -68,7 +71,8 @@ void main() {
     });
 
     test('SetPushRodSpeedAck.fromBytes throws for non-empty payload', () {
-      expect(() => SetPushRodSpeedAck.fromBytes(const [0x00]), throwsArgumentError);
+      expect(() => SetPushRodSpeedAck.fromBytes(const [0x00]),
+          throwsArgumentError);
     });
   });
 }

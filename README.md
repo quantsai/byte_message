@@ -47,7 +47,7 @@ Add the dependency in `pubspec.yaml`:
 
 ```yaml
 dependencies:
-byte_message: ^1.5.1
+  byte_message: ^1.7.0
 ```
 
 Then run:

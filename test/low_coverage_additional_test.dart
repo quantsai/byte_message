@@ -1,11 +1,9 @@
 import 'package:test/test.dart';
 import 'package:byte_message/byte_message.dart';
 // 设备语言未在公共出口中导出，测试使用内部模块路径
-import 'package:byte_message/src/protocols/layer3/control_bus/get_device_language.dart';
 // 字节打包工具未在公共出口中导出，测试使用内部模块路径
 import 'package:byte_message/src/utils/byte_packing.dart';
 // 枚举命令未在公共出口中导出，测试使用内部模块路径
-import 'package:byte_message/src/models/layer2/control_bus_cmd.dart';
 
 void main() {
   group('L3 SetSpeed (speed_control)', () {

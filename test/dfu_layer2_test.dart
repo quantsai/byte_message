@@ -1,4 +1,3 @@
-import 'package:byte_message/src/models/layer2/dfu_cmd.dart';
 import 'package:test/test.dart';
 import 'package:byte_message/byte_message.dart';
 

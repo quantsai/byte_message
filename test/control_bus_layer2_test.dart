@@ -1,6 +1,5 @@
 import 'package:test/test.dart';
 import 'package:byte_message/byte_message.dart';
-import 'package:byte_message/src/models/layer2/control_bus_cmd.dart';
 
 /// 构造一个 ControlBusMessage 的测试辅助函数。
 ///

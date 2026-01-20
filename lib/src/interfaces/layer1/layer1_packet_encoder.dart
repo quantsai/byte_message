@@ -44,7 +44,6 @@ abstract class Layer1PacketEncoder<P> {
   /// [packet] 包模型对象
   /// 返回 true 则表示需要长帧模式
   bool requiresLongFrame(P packet);
-
 }
 
 // 注意：抽象层不定义具体异常类型，具体实现应使用标准异常（ArgumentError/StateError/RangeError）

@@ -2,8 +2,6 @@ import 'package:test/test.dart';
 import 'package:byte_message/src/factories/dfu_factory.dart';
 import 'package:byte_message/src/protocols/layer1/inter_chip_encoder.dart';
 import 'package:byte_message/src/models/layer1/inter_chip_models.dart';
-import 'package:byte_message/src/models/layer2/dfu_cmd.dart';
-import 'package:byte_message/src/protocols/layer2/dfu/dfu_decoder.dart';
 import 'package:byte_message/src/protocols/layer3/dfu/dfu_blob.dart';
 import 'package:byte_message/src/protocols/layer3/dfu/write_upgrade_bulk.dart';
 

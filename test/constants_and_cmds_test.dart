@@ -1,8 +1,6 @@
 import 'package:test/test.dart';
 import 'package:byte_message/byte_message.dart';
 // 直接引用 src 以测试未导出的常量文件
-import 'package:byte_message/src/models/layer2/control_bus_cmd.dart';
-import 'package:byte_message/src/models/layer2/dfu_cmd.dart';
 
 void main() {
   group('Constants: ControlBus CbCmd values', () {

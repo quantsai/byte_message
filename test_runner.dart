@@ -11,6 +11,7 @@
 library;
 
 import 'dart:io';
+
 class TestRunner {
   static const String _resetColor = '\x1B[0m';
   static const String _greenColor = '\x1B[32m';

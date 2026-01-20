@@ -1,7 +1,6 @@
 import 'package:test/test.dart';
 import 'package:byte_message/byte_message.dart';
 import 'package:byte_message/src/utils/byte_packing.dart';
-import 'package:byte_message/src/protocols/layer3/dfu/dfu_blob.dart';
 
 void main() {
   group('Layer3 DFU: Start/Finish Upgrade', () {

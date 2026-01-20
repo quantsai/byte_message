@@ -1,6 +1,5 @@
 import 'package:test/test.dart';
 import 'package:byte_message/byte_message.dart';
-import 'package:byte_message/src/models/layer2/dfu_cmd.dart';
 
 void main() {
   group('Layer2 DFU Models: DfuMessage', () {

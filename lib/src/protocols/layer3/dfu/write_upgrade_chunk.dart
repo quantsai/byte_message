@@ -10,7 +10,6 @@
 /// - 与前两层解耦，仅处理第三层内容字节（不包含 Cmd / DfuCmd / DfuVersion 等二/一层字段）。
 library byte_message.l3.dfu.write_upgrade_chunk;
 
-import 'package:byte_message/src/utils/byte_packing.dart';
 import 'package:byte_message/src/protocols/layer3/dfu/dfu_blob.dart';
 
 /// 写升级包请求（第三层）
