@@ -13,17 +13,17 @@ import 'package:byte_message/src/utils/byte_packing.dart';
 
 /// 第三层：设置推杆速度请求
 class SetPushRodSpeedReq {
-  /// 推杆 A 速度（s32 BE）
-  final double speedA;
+  /// 推杆 A 速度（s32 LE）
+  final int speedA;
 
-  /// 推杆 B 速度（s32 BE）
-  final double speedB;
+  /// 推杆 B 速度（s32 LE）
+  final int speedB;
 
-  /// 推杆 C 速度（s32 BE）
-  final double speedC;
+  /// 推杆 C 速度（s32 LE）
+  final int speedC;
 
-  /// 推杆 D 速度（s32 BE）
-  final double speedD;
+  /// 推杆 D 速度（s32 LE）
+  final int speedD;
 
   /// 构造函数
   ///
@@ -39,15 +39,15 @@ class SetPushRodSpeedReq {
     required this.speedD,
   });
 
-  /// 编码第三层请求负载（s32 BE: A/B/C/D）
+  /// 编码第三层请求负载（s32 LE: A/B/C/D）
   ///
   /// 返回：长度 16 字节的数组 [A(4) | B(4) | C(4) | D(4)]
   List<int> encode() {
     final bytes = <int>[];
-    bytes.addAll(packF32BE(speedA));
-    bytes.addAll(packF32BE(speedB));
-    bytes.addAll(packF32BE(speedC));
-    bytes.addAll(packF32BE(speedD));
+    bytes.addAll(packS32LE(speedA));
+    bytes.addAll(packS32LE(speedB));
+    bytes.addAll(packS32LE(speedC));
+    bytes.addAll(packS32LE(speedD));
     return bytes;
   }
 }

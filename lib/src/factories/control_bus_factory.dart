@@ -957,7 +957,7 @@ class ControlBusFactory {
   /// 编码：设置推杆速度请求（一次调用产出最终一层字节流）
   ///
   /// 功能描述：
-  /// - 将第三层“设置推杆速度请求”的负载（四路 s32 BE：A/B/C/D）编码为二层 ControlBusMessage（CbCmd=0x42），
+  /// - 将第三层“设置推杆速度请求”的负载（四路 s32 LE：A/B/C/D）编码为二层 ControlBusMessage（CbCmd=0x42），
   ///   再包装为一层 InterChipPacket（Cmd=0xF8 普通指令），最终输出完整字节序列。
   ///
   /// 参数说明：
@@ -970,13 +970,13 @@ class ControlBusFactory {
   /// 返回值：
   /// - List<int>：完整的一层字节流，可直接发送。
   List<int> encodeSetPushRodSpeedReq({
-    required double a,
-    required double b,
-    required double c,
-    required double d,
+    required int a,
+    required int b,
+    required int c,
+    required int d,
     int? flag,
   }) {
-    // 1) Layer3：创建请求对象并编码第三层负载（s32 BE * 4）
+    // 1) Layer3：创建请求对象并编码第三层负载（s32 LE * 4）
     final l3Payload = SetPushRodSpeedReq(
       speedA: a,
       speedB: b,

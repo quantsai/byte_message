@@ -6,3 +6,4 @@ debug_decode.dart
 .vscode/
 .metadata/
 .DS_Store
+build/

@@ -51,23 +51,26 @@ void main() {
   });
 
   group('L3 SetPushRodSpeed', () {
-    test('encode 4 x f32 BE (IEEE 754) to 16 bytes', () {
+    test('encode produces correct bytes for s32 LE', () {
+      // 1 -> 0x01000000
+      // -1 -> 0xFFFFFFFF
       final req = SetPushRodSpeedReq(
-        speedA: 1.5,
-        speedB: -2.25,
-        speedC: 0.0,
-        speedD: 100.0,
+        speedA: 1,
+        speedB: 2,
+        speedC: 3,
+        speedD: -1,
       );
       final bytes = req.encode();
-      expect(bytes.length, equals(16));
-      // A=1.5 -> 0x3F C0 00 00
-      expect(bytes.sublist(0, 4), equals([0x3F, 0xC0, 0x00, 0x00]));
-      // B=-2.25 -> 0xC0 10 00 00
-      expect(bytes.sublist(4, 8), equals([0xC0, 0x10, 0x00, 0x00]));
-      // C=0.0 -> 0x00 0x00 0x00 0x00
-      expect(bytes.sublist(8, 12), equals([0x00, 0x00, 0x00, 0x00]));
-      // D=100.0 -> 0x42 C8 00 00
-      expect(bytes.sublist(12, 16), equals([0x42, 0xC8, 0x00, 0x00]));
+      expect(bytes.length, 16);
+      expect(
+        bytes,
+        equals([
+          0x01, 0x00, 0x00, 0x00, // A
+          0x02, 0x00, 0x00, 0x00, // B
+          0x03, 0x00, 0x00, 0x00, // C
+          0xFF, 0xFF, 0xFF, 0xFF, // D
+        ]),
+      );
     });
 
     test('SetPushRodSpeedAck.fromBytes throws for non-empty payload', () {

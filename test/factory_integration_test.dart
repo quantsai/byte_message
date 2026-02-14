@@ -654,18 +654,19 @@ void main() {
       expect(l2.cbPayload, equals([SpeedGear.gear2.value]));
     });
 
-    /// 功能描述：验证 ControlBusFactory.encodeSetPushRodSpeedReq 的编码，并通过 L1/L2 解码检查 CbCmd 与第三层负载
+    /// 功能描述：验证 ControlBusFactory.encodeSetPushRodSpeedReq 生成的一层字节流，
+    /// 能被第一层与第二层解码为预期的 Cmd 与 CbCmd，并包含第三层请求负载（四路 s32 LE）。
     test('encode set pushrod speed request -> decode L1/L2/L3 content', () {
-      // A=1.0, B=2.0, C=3.0, D=4.0 -> float32 BE
-      // 1.0 = 0x3F800000
-      // 2.0 = 0x40000000
-      // 3.0 = 0x40400000
-      // 4.0 = 0x40800000
+      // A=1, B=2, C=3, D=-1 -> int32 LE
+      // 1 = 0x01000000
+      // 2 = 0x02000000
+      // 3 = 0x03000000
+      // -1 = 0xFFFFFFFF
       final bytes = ControlBusFactory().encodeSetPushRodSpeedReq(
-        a: 1.0,
-        b: 2.0,
-        c: 3.0,
-        d: 4.0,
+        a: 1,
+        b: 2,
+        c: 3,
+        d: -1,
       );
 
       final l1 = InterChipDecoder().decode(bytes);
@@ -677,10 +678,10 @@ void main() {
       expect(l2!.cbCmd, CbCmd.pushRodControlRequest);
 
       final expectedPayload = [
-        0x3F, 0x80, 0x00, 0x00, // A
-        0x40, 0x00, 0x00, 0x00, // B
-        0x40, 0x40, 0x00, 0x00, // C
-        0x40, 0x80, 0x00, 0x00, // D
+        0x01, 0x00, 0x00, 0x00, // A
+        0x02, 0x00, 0x00, 0x00, // B
+        0x03, 0x00, 0x00, 0x00, // C
+        0xFF, 0xFF, 0xFF, 0xFF, // D
       ];
       expect(l2.cbPayload, equals(expectedPayload));
     });
